@@ -1,0 +1,181 @@
+﻿ID,Difficulty,Category,DisplayText,Reading,RecommendedRomaji,SourceBasis,Note
+B001,BEGINNER,足場,足場,あしば,ashiba,2020年の経営者,基本用語
+B002,BEGINNER,足場,支柱,しちゅう,shichuu,20190313_vol.18「Compass』.pdf,足場部材
+B003,BEGINNER,出荷,出荷,しゅっか,shukka,グループ報「Compass」vol.10.pdf,倉庫業務
+B004,BEGINNER,返却,返却,へんきゃく,henkyaku,グループ報「Compass」vol.10.pdf,倉庫業務
+B005,BEGINNER,安全,安全,あんぜん,anzen,グループ報「Compass」vol.10.pdf,基本理念
+B006,BEGINNER,品質,品質,ひんしつ,hinshitsu,2024年5月に公表した 「中期経営計画2024-2026」,品質管理
+B007,BEGINNER,整備,整備,せいび,seibi,中期経営計画 2024-2026,機材メンテナンス
+B008,BEGINNER,検収,検収,けんしゅう,kenshuu,グループ報「Compass」vol.10.pdf,倉庫検品
+B009,BEGINNER,在庫,在庫,ざいこ,zaiko,グループ報「Compass」vol.20_0303.pdf,管理業務
+B010,BEGINNER,配車,配車,はいしゃ,haisha,グループ報「Compass」vol.20_0303.pdf,物流業務
+B011,BEGINNER,物流,倉庫,そうこ,souko,2024年5月に公表した 「中期経営計画2024-2026」,施設名
+B012,BEGINNER,物流,基地,きち,kichi,中期経営計画 2024-2026,機材ベースの表現
+B013,BEGINNER,生産,工場,こうじょう,koujou,20190313_vol.18「Compass』.pdf,製造拠点
+B014,BEGINNER,改善,改善,かいぜん,kaizen,20190313_vol.18「Compass』.pdf,カイゼン活動
+B015,BEGINNER,理念,愛,あい,ai,コーポレート・アイデンティティ,社是
+B016,BEGINNER,理念,自走,じそう,jisou,2026年5月度月例会トップメッセージ,自考自走
+B017,BEGINNER,人事,コイン,こいん,koin,「コイン制度」の本格運用を開始！,社内通貨
+B018,BEGINNER,DX,デジタル,でじたる,dejitaru,2024年5月に公表した 「中期経営計画2024-2026」,DX推進
+B019,BEGINNER,現場,現場,げんば,genba,グループ報「Compass」vol.12.pdf,施工現場
+B020,BEGINNER,足場,吊り足場,つりあしば,tsuriashiba,2026年5月度月例会トップメッセージ,足場種類
+B021,BEGINNER,足場資材,クランプ,くらんぷ,kuranpu,グループ報「Compass」vol.12.pdf,接続金具
+B022,BEGINNER,生産,溶接,ようせつ,yousetsu,Compass_vol.26.pdf,製造工程
+B023,BEGINNER,足場,枠組,わくぐみ,wakugumi,Compass_27_0920.pdf,従来足場形式
+B024,BEGINNER,足場,法面,のりめん,norimen,会社プロフィール20260710,傾斜地足場
+B025,BEGINNER,足場,支保工,しほこう,shihokou,会社プロフィール20260710,重量支保工
+B026,BEGINNER,足場資材,鋼管,こうかん,koukan,グループ報「Compass」vol.01.pdf,金属素材
+B027,BEGINNER,物流,運搬,うんぱん,unpan,グループ報「Compass」vol.01.pdf,運搬作業
+B028,BEGINNER,DX,ロボット,ろぼっと,robotto,グループ報「Compass」vol.24_A4.pdf,自動倉庫
+B029,BEGINNER,DX,レール,れーる,re-ru,グループ報「Compass」vol.01.pdf,ロボットレール
+B030,BEGINNER,安全,カメラ,かめら,kamera,2026年8月度月例会トップメッセージ,定点カメラ
+B031,BEGINNER,業務,伝票,でんぴょう,denpyou,Compass_vol.21_A4_0821.pdf,伝票発行
+B032,BEGINNER,業務,日報,にっぽう,nippou,2026年5月度月例会トップメッセージ,日報提出
+B033,BEGINNER,業務,棚卸,たなおろし,tanaoroshi,Compass_vol.29_0422.pdf,在庫確認
+B034,BEGINNER,足場資材,弁慶,べんけい,benkei,Compass_vol.22_連結_0218.pdf,柱型枠商品名
+B035,BEGINNER,業務,満了,まんりょう,manryou,歴史・沿革 | 企業情報,契約満了
+B036,BEGINNER,業務,稼働,かどう,kadou,Compass_27_0920.pdf,機材稼働率
+B037,BEGINNER,足場資材,単管,たんかん,tankan,グループ報「Compass」vol.12.pdf,単管パイプ
+B038,BEGINNER,現場,職人,しょくにん,shokunin,グループ報「Compass」vol.12.pdf,鳶職人
+B039,BEGINNER,業務,精算,せいさん,seisan,Compass_vol.29_0422.pdf,確認精算
+B040,BEGINNER,品質,クレーム,くれーむ,kure-mu,Compass_vol.20_0303.pdf,品質クレーム
+B041,BEGINNER,改善,無駄,むだ,muda,2026年5月度月例会トップメッセージ,業務の無駄
+B042,BEGINNER,業務,成果,せいか,seika,2026年5月度月例会トップメッセージ,成果追求
+B043,BEGINNER,改善,効率,こうりつ,kouritsu,Compass_vol.21_A4_0821.pdf,効率向上
+B044,BEGINNER,業務,ルール,るーる,ru-ru,2026年5月度月例会トップメッセージ,返却ルール
+B045,BEGINNER,品質,根拠,こんきょ,konkyo,2026年8月度月例会トップメッセージ,エビデンス
+B046,BEGINNER,DX,ポータル,ぽーたる,po-taru,2024年5月に公表した 「中期経営計画2024-2026」,OPERAポータル
+B047,BEGINNER,人事,オファー,おふぁー,ofa-,【プレスリリース】タカミヤ、社内副業制度「コイン制度」,スキルオファー
+B048,BEGINNER,業務,フロー,ふろー,furo-,中期経営計画 2024-2026,業務フロー
+B049,BEGINNER,人事,スキル,すきる,sukiru,【プレスリリース】タカミヤ、社内副業制度「コイン制度」,スキル登録
+B050,BEGINNER,足場資材,パイプ,ぱいぷ,paipu,グループ報「Compass」vol.01.pdf,鋼管パイプ
+B051,BEGINNER,生産,働き,はたらき,hataraki,Compass_vol.20_0303.pdf,自働化における働き
+B052,BEGINNER,改善,コスト,こすと,kosuto,20190313_vol.18「Compass』.pdf,原価低減
+B053,BEGINNER,人事,評価,ひょうか,hyouka,2026年8月度月例会トップメッセージ,AI活用評価
+B054,BEGINNER,人事,機会,きかい,kikai,【プレスリリース】タカミヤ、社内副業制度「コイン制度」,成長機会
+B055,BEGINNER,理念,笑顔,えがお,egao,タカミヤの実現したい未来 社是 経営理念,笑顔の創造
+B056,BEGINNER,業務,予算,よさん,yosan,2026年5月度月例会トップメッセージ,コイン制度予算
+B057,BEGINNER,業務,営業,えいぎょう,eigyou,20190313_vol.18「Compass』.pdf,営業部門
+B058,BEGINNER,業務,事務,じむ,jimu,Compass_vol.21_A4_0821.pdf,事務職サポート
+B059,BEGINNER,物流,積込,つみこみ,tsumikomi,Compass_vol.21_A4_0821.pdf,積込作業
+B060,BEGINNER,物流,返納,へんのう,hennou,中期経営計画 2024-2026,返納機材員数
+I001,INTERMEDIATE,足場資材,Iqシステム,Iqしすてむ,iqshisutemu,2024年5月に公表した 「中期経営計画2024-2026」,次世代足場名・英数字表記入力
+I002,INTERMEDIATE,理念,自考自走,じこうじそう,jikoujisou,Compass_vol.22_連結_0218.pdf,求める社員像
+I003,INTERMEDIATE,人事,コイン制度,こいんせいど,koinseido,「コイン制度」の本格運用を開始！,社内副業制度
+I004,INTERMEDIATE,DX,タカミヤプラットフォーム,たかみやぷらっとふぉーむ,takamiyapurattofo-mu,中期経営計画 2024-2026,新事業ビジョン
+I005,INTERMEDIATE,物流,機材Base,きざいBase,kizaibase,中期経営計画 2024-2026,管理物流拠点・英数字表記入力
+I006,INTERMEDIATE,品質,TQM,TQM,tqm,2026年5月度月例会トップメッセージ,Takamiya Quality Management・英数字表記入力
+I007,INTERMEDIATE,物流,フォークリフト,ふぉーくりふと,fo-kurifuto,Compass vol28.pdf,積込運搬車両
+I008,INTERMEDIATE,足場資材,ジャッキベース,じゃっきべーす,jakkibe-su,20190313_vol.18「Compass』.pdf,足場脚部資材
+I009,INTERMEDIATE,物流,最速入出庫,さいそくにゅうしゅっこ,saisokunyuushukko,Compass vol28.pdf,入出庫時間短縮
+I010,INTERMEDIATE,物流,ファストレーン,ふぁすとれーん,fasutore-n,Compass vol28.pdf,事前オーダー優先レーン
+I011,INTERMEDIATE,安全,定点カメラ,ていてんかめら,teitenkamera,2026年8月度月例会トップメッセージ,エビデンス映像記録
+I012,INTERMEDIATE,物流,トラックスケール,とらっくすけーる,torakkusuke-ru,中期経営計画 2024-2026,重量測定装置
+I013,INTERMEDIATE,DX,AI自動員数,AIじどういんすう,aijidouinsuu,Compass vol28.pdf,画像認識員数カウント・英数字表記入力
+I014,INTERMEDIATE,足場資材,スパイダーパネル,すぱいだーぱねる,supaida-paneru,Compass_vol.26.pdf,アルミ・鉄の溶接複合製品
+I015,INTERMEDIATE,足場資材,YTロックシステム,YTろっくしすてむ,ytrokkushisutemu,タカミヤの実現したい未来 社是 経営理念,法面工事専用足場・英数字表記入力
+I016,INTERMEDIATE,足場資材,リフトクライマー,りふとくらいまー,rifutokuraima-,タカミヤの実現したい未来 社是 経営理念,移動昇降式足場
+I017,INTERMEDIATE,足場資材,吊棚足場,つりだなあしば,tsuridanaashiba,タカミヤの実現したい未来 社是 経営理念,V-MAX吊棚足場
+I018,INTERMEDIATE,改善,2S活動,2Sかつどう,2skatsudou,Compass_vol.26.pdf,整理・整頓の徹底・英数字表記入力
+I019,INTERMEDIATE,品質,4M3H,4M3H,4m3h,Compass_vol.26.pdf,製造異常防止フレームワーク・英数字表記入力
+I020,INTERMEDIATE,人事,スキル可視化,すきるかしか,sukirukashika,【プレスリリース】タカミヤ、社内副業制度「コイン制度」,イントラネット登録
+I021,INTERMEDIATE,生産,労働生産性,ろうどうせいさんせい,roudouseisansei,20190313_vol.18「Compass』.pdf,製造本部KPI
+I022,INTERMEDIATE,生産,原価低減,げんかていげん,genkateigen,20190313_vol.18「Compass』.pdf,改善活動の要
+I023,INTERMEDIATE,品質,不良品ゼロ,ふりょうひんぜろ,furyouhinzero,20190313_vol.18「Compass』.pdf,群馬・岐阜工場目標
+I024,INTERMEDIATE,品質,安全品質の標準化,あんぜんひんしつのひょうじゅんか,anzenhinshitsunohyoujunka,Compass_vol.29_0422.pdf,髙宮社長TQM理念
+I025,INTERMEDIATE,DX,儲かる助かる仕組み,もうかるたすかるしくみ,moukarutasukarushikumi,2026年5月度月例会トップメッセージ,プラットフォームベネフィット
+I026,INTERMEDIATE,福利厚生,結婚記念日休暇,けっこんきねんびきゅうか,kekkonkinenbikyuuka,グループ報「Compass」vol.02.pdf,アニバーサリー有休
+I027,INTERMEDIATE,福利厚生,会員制リゾートホテル,かいいんせいりぞーとほてる,kaiinseirizo-tohoteru,グループ報「Compass」vol.02.pdf,福利厚生関連・外部ブランド名を一般化
+I028,INTERMEDIATE,足場資材,Gウォーク,Gうぉーく,gwho-ku,Compass_vol.21_A4_0821.pdf,Iqシステム用オプション布板・英数字表記入力
+I029,INTERMEDIATE,足場資材,Aウォーク,Aうぉーく,awho-ku,Compass_vol.21_A4_0821.pdf,アルミ製軽量布板・英数字表記入力
+I030,INTERMEDIATE,足場,次世代足場,じせだいあしば,jisedaiashiba,2024年5月に公表した 「中期経営計画2024-2026」,Iqシステム等
+I031,INTERMEDIATE,開発,開発プロジェクト,かいはつぷろじぇくと,kaihatsupurojekuto,Compass_vol.23_0927.pdf,タカミヤブランド開発
+I032,INTERMEDIATE,組織,営業本部,えいぎょうほんぶ,eigyouhonbu,Compass_vol.19_A4.pdf,レンタル営業を統括
+I033,INTERMEDIATE,組織,技術サービス課,ぎじゅつさーびすか,gijutsusa-bisuka,20190313_vol.18「Compass』.pdf,工事設計・積算等
+I034,INTERMEDIATE,組織,機材品質管理部,きざいひんしつかんりぶ,kizaihinshitsukanribu,Compass_vol.19_A4.pdf,新設の品質保証部門
+I035,INTERMEDIATE,安全,労働災害防止,ろうどうさいがいぼうし,roudousaigaiboushi,2024年5月に公表した 「中期経営計画2024-2026」,安全講習目的
+I036,INTERMEDIATE,安全,安全衛生体感教育,あんぜんえいせいたいかんきょういく,anzeneiseitaikankyouiku,中期経営計画 2024-2026,体験型教育施設での実習
+I037,INTERMEDIATE,組織,タカミヤラボ,たかみやらぼ,takamiyarabo,Compass_vol.23_0927.pdf,Takamiya Lab. West等
+I038,INTERMEDIATE,物流,ロボットレール,ろぼっとれーる,robottore-ru,グループ報「Compass」vol.01.pdf,自動運搬レールシステム
+I039,INTERMEDIATE,物流,2024年問題,2024ねんもんだい,2024nenmondai,グループ報「Compass」vol.01.pdf,物流働き方改革・英数字表記入力
+I040,INTERMEDIATE,人事,人手不足の解消,ひとでぶそくのかいしょう,hitodebusokunokaishou,【プレスリリース】タカミヤ、社内副業制度「コイン制度」,コイン制度の主要効果
+I041,INTERMEDIATE,人事,スキルアップ,すきるあっぷ,sukiruappu,【プレスリリース】タカミヤ、社内副業制度「コイン制度」,社内副業によるスキル磨き
+I042,INTERMEDIATE,組織,グローバル調達,ぐろーばるちょうたつ,guro-baruchoutatsu,Compass_vol.19_A4.pdf,グローバル調達本部
+I043,INTERMEDIATE,DX,OPE-MANE,OPE-MANE,ope-mane,中期経営計画 2024-2026,足場運用マネジメントサービス・英数字表記入力
+I044,INTERMEDIATE,DX,OPERA,OPERA,opera,中期経営計画 2024-2026,プラットフォームポータルシステム・英数字表記入力
+I045,INTERMEDIATE,理念,価値価格価額,かちかかくかがく,kachikakakukagaku,2026年5月度月例会トップメッセージ,三つの『か』の議論
+I046,INTERMEDIATE,業務,ユーザーの声,ゆーざーのこえ,yu-za-nokoe,Compass vol28.pdf,プラットフォーム利用者の評価
+I047,INTERMEDIATE,物流,出荷準備エリア,しゅっかじゅんびえりあ,shukkajunbieria,Compass vol28.pdf,最速入出庫ヤード
+I048,INTERMEDIATE,物流,返却機材の確認,へんきゃくきざいのかくにん,henkyakukizainokakunin,Compass_vol.29_0422.pdf,返納・検収工程
+I049,INTERMEDIATE,人事,ワークライフバランス,わーくらいふばらんす,wa-kuraifubaransu,「コイン制度」の本格運用を開始！,働き方改革目標
+I050,INTERMEDIATE,物流,積載重量,せきさいじゅうりょう,sekisaijuuryou,建設業界の大幅なコスト削減実現、革新的プラットフォーム,トラックスケール測定項目
+I051,INTERMEDIATE,足場資材,TLEVER,TLEVER,tlever,【プレスリリース】タカミヤ、社内副業制度「コイン制度」,足場運搬ロボット・英数字表記入力
+I052,INTERMEDIATE,足場資材,T-Earth,T-Earth,t-earth,【プレスリリース】タカミヤ、社内副業制度「コイン制度」,安全性クリア新型クランプ・英数字表記入力
+I053,INTERMEDIATE,足場資材,垂直設置型太陽光架台,すいちょくせっちがたたいようこうかだい,suichokusecchigatataiyoukoukadai,【プレスリリース】タカミヤ、社内副業制度「コイン制度」,垂直設置架台 H-V system
+I054,INTERMEDIATE,改善,サステナブルプロジェクト,さすてなぶるぷろじぇくと,sasutenaburupurojekuto,【プレスリリース】タカミヤ、社内副業制度「コイン制度」,未稼働資材リサイクル計画
+I055,INTERMEDIATE,人事,Tobira,Tobira,tobira,【プレスリリース】タカミヤ、社内副業制度「コイン制度」,鳶職人特化型無料求人サイト・英数字表記入力
+I056,INTERMEDIATE,組織,プラットフォームパートナー,ぷらっとふぉーむぱーとなー,purattofo-mupa-tona-,タカミヤ、パートナー企業の機材保管拠点を活用し, Platform Partner 制度
+I057,INTERMEDIATE,協力会社,機材保管拠点,きざいほかんきょてん,kizaihokankyoten,タカミヤ、パートナー企業の機材保管拠点を活用し,Platform Partner関連・外部企業名を一般化
+I058,INTERMEDIATE,品質,経年仮設機材,けいねんかせつきざい,keinenkasetsukizai,【プレスリリース】タカミヤ、社内副業制度「コイン制度」,経年強度の可視化対象
+I059,INTERMEDIATE,組織,組織トランスフォーム,そしきとらんすふぉーむ,soshikitoransufo-mu,Compass_vol.19_A4.pdf,柔軟な組織への変革
+I060,INTERMEDIATE,品質,実大試験器,じつだいしけんき,jitsudaishikenki,2024年5月に公表した 「中期経営計画2024-2026」,経経年強度データ測定装置
+A001,ADVANCED,改善,一歩・一秒・一円活動に取り組む,いっぽいちびょういちえんかつどうにとりくむ,ippoichibyouichienkatsudounitorikumu,20190313_vol.18「Compass』.pdf,製造原価低減活動
+A002,ADVANCED,生産,作る工場から稼ぐ工場へ,つくるこうじょうからかせぐこうじょうへ,tsukurukoujoukarakasegukoujouhe,20190313_vol.18「Compass』.pdf,製造本部の合言葉
+A003,ADVANCED,足場資材,階高1900ミリ次世代足場Iqシステム,かいだか1900みりじせだいあしばIqしすてむ,kaidaka1900mirijisedaiashibaiqshisutemu,2024年5月に公表した 「中期経営計画2024-2026」,安全作業足場標準スペック・英数字表記入力
+A004,ADVANCED,品質,デジタルを活用して安心を見える化する,でじたるをかつようしてあんしんをみえるかする,dejitaruwokatsuyoushiteanshinwomierukasuru,2026年5月度月例会トップメッセージ,TQMの目的
+A005,ADVANCED,物流,人手に頼る業務フローからの脱却を推進する,ひとでにたよるぎょうむふろーからのだっきゃくをすいしんする,hitodenitayorugyoumufuro-karanodakkyakuwosuishinsuru,中期経営計画 2024-2026,管理整備効率化
+A006,ADVANCED,安全,定点カメラの映像という明確なエビデンス,ていてんかめらのえいぞうというめいかくなえびでんす,teitenkameranoeizoutoiumeikakunaebidensu,2026年8月度月例会トップメッセージ＆社長のお誕生日会の様子,数量確認等エビデンス効果
+A007,ADVANCED,物流,動線を短くし短時間で入出庫が可能になる,どうせんをみじかくしたんじかんでにゅうしゅっこがかのうになる,dousenwomijikakushitanjikandenyuushukkogakanouninaru,Compass vol28.pdf,最速入出庫ヤードレイアウト
+A008,ADVANCED,DX,AI自動員数により生産性向上を実現する,AIじどういんすうによりせいさんせいこうじょうをじつげんする,aijidouinsuuniyoriseisanseikoujouwojitsugensuru,Compass vol28.pdf,AI員数確認効果・英数字表記入力
+A009,ADVANCED,足場,枠組足場に代わる安全性と効率性の追求,わくぐみあしばにかわるあんぜんせいとこうりつのついきゅう,wakugumiashibanikawaruanzenseitokouritsunotsuikyuu,Compass_vol.21_A4_0821.pdf,次世代足場研究会発足理由
+A010,ADVANCED,生産,自分たちで稼ぐという意識を持ち生産性向上に努める,じぶんたちでかせぐといういしきをもちせいさんせいこうじょうにつとめる,jibuntachidekasegutoiuishikiwomochiseisanseikoujounitsutomeru,20190313_vol.18「Compass』.pdf,製造本部方針
+A011,ADVANCED,改善,2Sを進めることでケガのリスクを減らす,2Sをすすめることでけがのりすくをへらす,2swosusumerukotodekeganorisukuwoherasu,Compass_vol.26.pdf,群馬工場整理整頓事例・英数字表記入力
+A012,ADVANCED,品質,4M3Hの視点でヒューマンエラーを削減する,4M3Hのしてんでひゅーまんえらーをさくげんする,4m3hnoshitendehyu-manera-wosakugensuru,Compass_vol.26.pdf,製造ライン管理視点・英数字表記入力
+A013,ADVANCED,品質,誰が見ても納得できる品質の根拠をつくる,だれがみてもなっとくできるひんしつのこんきょをつくる,daregamitemonattokudekiruhinshitsunokonkyowotsukuru,Compass_vol.29_0422.pdf,TQMの目指す根拠ある安全
+A014,ADVANCED,足場,機材を抱えるから柔軟に使う発想への転換,きざいをかかえるからじゅうなんにつかうはっそうへのてんかん,kizaiwokakaerukarajuunannitsukauhassouhenotenkan,Compass_vol.29_0422.pdf,OPE-MANEプラットフォーム導入趣旨
+A015,ADVANCED,人事,自分で働く場所や時間や賃金を決めて自走する,じぶんではたらくばしょやじかんやちんぎんをきめてじそうする,jibundehatarakubashoyajikanyachinginwokimetejisousuru,2026年5月度月例会トップメッセージ,コイン制度最終目的
+A016,ADVANCED,理念,価値価格価額を念頭において付加価値を生み出す,かちかかくかがくをねんとうにおいてふかかちをうみだす,kachikakakukagakuwonentounioitefukakachiwoumidasu,2026年5月度月例会トップメッセージ,三つの『か』の議論
+A017,ADVANCED,安全,知らないことを無くし見えないものを見えるようにする,しらないことをなくしみえないものをみえるようにする,shiranaikotowonakushimienaimonowomieruyounisuru,2026年5月度月例会トップメッセージ,事故防止と足場経年強度の可視化
+A018,ADVANCED,業務,法律や既存のルールの枠の中だけで考えない,ほうりつやきぞんのるーるのわくのなかだけでかんがえない,houritsuyakizonnoru-runowakunonakadakedekangaenai,Compass_vol.29_0422.pdf,イノベーションへの意識
+A019,ADVANCED,理念,儲かる助かる喜ばれる明日を共に創る,もうかるたすかるよろこばれるあしたをともにつくる,moukarutasukaruyorokobareruashitawotomonitsukuru,Compass_vol.20_0303.pdf,タカミヤプラットフォームの合言葉
+A020,ADVANCED,理念,自己を愛し人を愛し会社を愛する,じこをあいしひとをあいしかいしゃをあいする,jikowoaishihitowoaishikaishawoaisuru,タカミヤの実現したい未来 社是 経営理念,社是『愛』の定義
+A021,ADVANCED,人事,繁忙期の人手不足と閑散期の余剰を平準化する,はんぼうきのひとでぶそくとかんさんきのよじょうをへいじゅんかする,hanboukinohitodebusokutokansankinoyojouwoheijunkasuru,【プレスリリース】タカミヤ、社内副業制度「コイン制度」,コイン制度の解決課題
+A022,ADVANCED,人事,自分のスキルが他部門で必要とされている実感,じぶんのすきるがたぶもんでひつようとされているじっかん,jibunnosukirugatabumondehitsuyoutosareteirujikkan,【プレスリリース】タカミヤ、社内副業制度「コイン制度」,モチベーション向上効果
+A023,ADVANCED,人事,部署や地域を越えた仕事を通じたスキルアップ,ぶしょやちいきをこえたしごとをつうじたすきるあっぷ,bushoyachiikiwokoetashigotowotsuujitasukiruappu,【プレスリリース】タカミヤ、社内副業制度「コイン制度」,社内副業成長効果
+A024,ADVANCED,人事,人手不足の地域をオープンに共有し支援を募る,ひとでぶそくのちいきをおーぷんにきょうゆうししえんをつのる,hitodebusokunochiikiwoo-punnikyouyuushishienwotsunoru,【プレスリリース】タカミヤ、社内副業制度「コイン制度」,社内派遣制度
+A025,ADVANCED,人事,男性の育児休業取得推進プロジェクトに賛同する,だんせいのいくじきゅうぎょうしゅとくすいしんぷろじぇくとにさんどうする,danseinoikujikyuugyoushutokusuishinpurojekutonisandousuru,【プレスリリース】タカミヤ、社内副業制度「コイン制度」,IKUKYU.PJTへの参画
+A026,ADVANCED,物流,天井が低い橋梁工事の現場における重労働の解消,てんじょうがひくいきょうりょうこうじのげんばにおけるじゅうろうどうのかいしょう,tenjougahikuikyouryoukoujinogenbaniokerujuuroudounokaishou,グループ報「Compass」vol.01.pdf,ロボットレール/TLEVER導入
+A027,ADVANCED,物流,労働力不足と時間外労働規制の複合的な危機,ろうどうりょくぶそくとじかんがいろうどうきせいのふくごうてきなきき,roudouryokubusokutojikangairoudoukiseinofukugoutekinakiki,グループ報「Compass」vol.01.pdf,２０２４年問題への課題定義
+A028,ADVANCED,DX,24時間365日オンラインで注文できる体制,24じかん365にちおんらいんでちゅうもんできるたいせい,24jikan365nichionraindechuumondekirutaisei,建設業界の大幅なコスト削減実現、革新的プラットフォーム,OPERA Webオーダー・英数字表記入力
+A029,ADVANCED,品質,実大試験器による経年化データの蓄積を進める,じつだいしけんきによるけいねんかでーたのちくせきをすすめる,jitsudaishikenkiniyorukeinenkade-tanochikusekiwosusumeru,2024年5月に公表した 「中期経営計画2024-2026」,経年機材の安全担保エビデンス
+A030,ADVANCED,品質,映像や重量による管理と実大試験器での強度試験,えいぞうやじゅうりょうによるかんりとじつだいしけんきでのきょうどしけん,eizouyajuuryouniyorukanritojitsudaishikenkidenokyoudoshiken,2024年5月に公表した 「中期経営計画2024-2026」,Takamiya Lab. Westでの取り組み
+A031,ADVANCED,生産,検査の精度を上げ後工程のダブルチェックを不要にする,けんさのせいどをあげあとこうていのだぶるちぇっくをふようにする,kensanoseidowoageatokouteinodaburuchekkuwofuyounisuru,Compass_vol.20_0303.pdf,岐阜工場の自働化目標
+A032,ADVANCED,生産,機械に製造の良し悪しを判断させる自働化の導入,きかいにせいぞうのよしあしをはんだんさせるじどうかのどうにゅう,kikainiseizounoyoshiashiwohandansaserujidoukanodounyuu,Compass_vol.20_0303.pdf,トヨタ生産方式を参考に自働化
+A033,ADVANCED,品質,抜き取り検査から全品検査への移行を推進する,ぬきとりけんさからぜんぴんけんさへのいこうをすいしんする,nukitorikensakarazenpinkensahenoikouwosuishinsuru,Compass_vol.20_0303.pdf,品質保証本部の2020年度移行方針
+A034,ADVANCED,品質,クレーム対応でお客様の生の要望を企画に活かす,くれーむたいおうでおきゃくさまのなまのようぼうをきかくにいかす,kure-mutaioudeokyakusamanonamanoyoubouwokikakuniikasu,Compass_vol.20_0303.pdf,品質保証本部が原価企画を担う
+A035,ADVANCED,組織,枠にとらわれない柔軟なトランスフォームを目指す,わくにとらわれないじゅうなんなとらんすふぉーむをめざす,wakunitorawarenaijuunannatoransufo-muwomezasu,Compass_vol.19_A4.pdf,シンプルな「タカミヤ」への社名変更に込めた想い
+A036,ADVANCED,組織,日本国内にとどまらず海外展開を加速する,にほんこくないにとどまらずかいがいてんかいをかそくする,nihonkokunainitodomarazukaigaitenkaiwokasokusuru,Compass_vol.21_A4_0821.pdf,海外事業展開
+A037,ADVANCED,組織,一般常識やルールに則って社会活動を推進する,いっぱんじょうしきやるーるにのっとってしゃかいかつどうをすいしんする,ippanjoushikiyaru-runinottotteshakaikatsudouwosuishinsuru,グループ報「Compass」vol.14.pdf,コンプライアンス順守
+A038,ADVANCED,組織,たった一度のコンプライアンス違反が失う企業の信頼,たったいちどのこんぷらいあんすいはんがうしなうきぎょうのしんらい,tattaichidonokonpuraiansuihangaushinaukigyounoshinrai,グループ報「Compass」vol.14.pdf,コンプライアンス教育
+A039,ADVANCED,人事,相手部署への感謝の気持ちをコインで表す,あいてぶしょへのかんしゃのきもちをこいんであらわす,aitebushohenokanshanokimochiwokoindearawasu,「コイン制度」の本格運用を開始！,コイン制度の波及効果
+A040,ADVANCED,人事,自分で働く場所や時間や給料を選べる仕組み,じぶんではたらくばしょやじかんやきゅうりょうをえらべるしくみ,jibundehatarakubashoyajikanyakyuuryouwoeraberushikumi,2026年5月度月例会トップメッセージ,多様な働き方の未来
+A041,ADVANCED,品質,経年化して強度が落ちた仮設機材は自社費用で作り替える,けいねんかしてきょうどがおちたかせつきざいはじしゃひようでつくりかえる,keinenkashitekyoudogaochitakasetsukizaihajishahiyoudetsukurikaeru,【タカミヤ決算】足場業界のリーダーが語る建設業界のDXと未来予想図,プラットフォーム上の経年更新サービス
+A042,ADVANCED,足場,借りるレンタルから安価な管理費でのスマートな運用へ,かりるれんたるからあんかなかんりひでのすまーとなうんようへ,karirurentarukaraankanakanrihidenosuma-tonaunyouhe,【タカミヤ決算】足場業界のリーダーが語る建設業界のDXと未来予想図,リースからプラットフォーム運用への転換
+A043,ADVANCED,業務,営業の仕事の質を高めて最短で信頼関係を築く,えいぎょうのしごとのしつをたかめてさいたんでしんらいかんけいをきずく,eigyounoshigotonoshitsuwotakametesaitandeshinraikankeiwokizuku,2026年5月度月例会トップメッセージ,2026年テクノロジー活用営業論
+A044,ADVANCED,業務,時間をかけるだけの営業から脱却しテクノロジーを活用する,じかんをかけるだけのえいぎょうからだっきょくしてくのろじーをかつようする,jikanwokakerudakenoeigyoukaradakkyokushitekunoroji-wokatsuyousuru,2026年5月度月例会トップメッセージ,営業活動の効率化
+A045,ADVANCED,人事,コインを集めることを目標にしてやりがいを高める,こいんをあつめることをもくひょうにしてやりがいをたかめる,koinwoatsumerukotowomokuhyounishiteyarigaiwotakameru,2026年5月度月例会トップメッセージ,コイン獲得モチベーション
+A046,ADVANCED,物流,混在をなくせば検収は早く終わり伝票確定も早まる,こんざいをなくせばけんしゅうははやくおわりでんぴょうかくていもはやまる,konzaiwonakusebakenshuuhahayakuowaridenpyoukakuteimohayamaru,2026年5月度月例会トップメッセージ,返却時の混在ゼロ運動
+A047,ADVANCED,品質,次の工程が迷わず進めるかやり直しを前提にしていないか,つぎのこうていがまよわずすすめるかやりなおしをぜんていにしていないか,tsuginokouteigamayowazususumerukayarinaoshiwozenteinishiteinaika,2026年5月度月例会トップメッセージ,TQMチェック観点
+A048,ADVANCED,業務,一ヶ月前の提案について現在の進捗を確認する,いっかげつまえのていあんについてげんざいのしんちょくをかくにんする,ikkagetsumaenoteiannitsuitegenzainoshinchokuwokakuninsuru,2026年5月度月例会トップメッセージ,進捗管理徹底の社長訓
+A049,ADVANCED,業務,できることをやらないのは考えていないのと同じである,できることをやらないのはかんがえていないのとどうじである,dekirukotowoyaranainohakangaeteinainotodoujidearu,2026年5月度月例会トップメッセージ,主体的な行動を促す戒め
+A050,ADVANCED,業務,正しいと思う道なら周囲の反発を恐れず何度でも挑む,ただしいとおもうみちならしゅういのはんぱつをおそれずなんどでもいどむ,tadashiitoomoumichinarashuuinohanpatsuwoosorezunandodemoidomu,2026年5月度月例会トップメッセージ,「言ってやったもん勝ち」精神
+A051,ADVANCED,福利厚生,会員制リゾートホテルを優待利用する,かいいんせいりぞーとほてるをゆうたいりようする,kaiinseirizo-tohoteruwoyuutairiyousuru,グループ報「Compass」vol.02.pdf,福利厚生紹介・外部ブランド名を一般化
+A052,ADVANCED,物流,全国の機材Baseによる迅速な機材供給,ぜんこくのきざいBaseによるじんそくなきざいきょうきゅう,zenkokunokizaibaseniyorujinsokunakizaikyoukyuu,タカミヤ、パートナー企業の機材保管拠点を活用し,ネットワーク・英数字表記入力
+A053,ADVANCED,組織,既存の拠点や人材を活かすプラットフォームパートナー制度,きぞんのきょてんやじんざいをいかすぷらっとふぉーむぱーとなーせいど,kizonnokyotenyajinzaiwoikasupurattofo-mupa-tona-seido,タカミヤ、パートナー企業の機材保管拠点を活用し,Platform Partner推進
+A054,ADVANCED,物流,使用後の仮設機材はタカミヤが回収し自社Baseで整備する,しようごのかせつきざいはたかみやがかいしゅうしじしゃBaseでせいびする,shiyougonokasetsukizaihatakamiyagakaishuushijishabasedeseibisuru,タカミヤ、パートナー企業の機材保管拠点を活用し,ストックSite型モデル運用・英数字表記入力
+A055,ADVANCED,物流,単管パイプがレール化する足場運搬ロボットシステム,たんかんぱいぷがれーるかするあしばうんぱんろぼっとしすてむ,tankanpaipugare-rukasuruashibaunpanrobottoshisutemu,グループ報「Compass」vol.01.pdf,ロボットレール構造説明
+A056,ADVANCED,改善,2Sは永遠のテーマであり本当の整理整頓を極める,2Sはえいえんのてーまでありほんとうのせいりせいとんをきわめる,2shaeiennote-madearihontounoseiriseitonwokiwameru,Compass_vol.26.pdf,群馬工場長インタビュー・英数字表記入力
+A057,ADVANCED,品質,監視ではなく正しい仕事をしている記録を残そうという意識,かんしではなくただしいしごとをしているきろくをのこそうといういしき,kanshidehanakutadashiishigotowoshiteirukirokuwonokosoutoiuishiki,Compass_vol.26.pdf,群馬工場カメラ活用意識
+A058,ADVANCED,開発,営業と開発が連携してお客様の声を製品に反映する,えいぎょうとかいはつがれんけいしておきゃくさまのこえをせいひんにはんえいする,eigyoutokaihatsugarenkeishiteokyakusamanokoewoseihinnihaneisuru,Compass_vol.21_A4_0821.pdf,Gウォーク・Aウォーク誕生秘話
+A059,ADVANCED,品質,人手不足やインフレが重なる建設業界で安全品質を標準化する,ひとでぶそくやいんふれがかさなるけんせつぎょうかいであんぜんひんしつをひょうじゅんかする,hitodebusokuyainfuregakasanarukensetsugyoukaideanzenhinshitsuwohyoujunkasuru,Compass_vol.29_0422.pdf,社長TQMメッセージ
+A060,ADVANCED,理念,お互いに思い合い常に切磋琢磨しながら成長できる環境,おたがいにおもいあいつねにせっさたくましながらせいちょうできるかんきょう,otagainiomoiaitsunenisessatakumashinagaraseichoudekirukankyou,「コイン制度」の本格運用を開始！,コイン制度導入主旨

@@ -38,7 +38,8 @@
 | | `btnLaunchGame` | DIRECT | [FR-001] | 選択した条件でゲームプレイを開始するボタン |
 | | `btnBackToTitle` | DERIVED_AFFORDANCE | [FR-006] | タイトル画面へ戻るナビゲーションボタン |
 | **ゲームプレイ画面** | `displayScore` | DIRECT | [FR-011] | 現在スコア表示（本番モードのみ表示） |
-| | `displayTimer` | DIRECT | [FR-006] | 残り制限時間プログレスバー & 秒数表示 |
+| | `displayGlobalTimer` | DIRECT | [FR-001], [FR-006] | 全体残り時間（Global Game Timer: 初期90秒）表示 |
+| | `displayForkliftTimer` | DIRECT | [FR-001], [FR-016] | 現在問題の走行時間（Per-Question Forklift Timer）プログレスバー |
 | | `displayCombo` | DIRECT | [FR-010] | 現在の連続正解コンボ数表示 |
 | | `displayJapanesePrompt` | DIRECT | [FR-002] | 出題中の日本語文章・単語表示 |
 | | `displayRomanizedTarget` | DIRECT | [FR-002] | ローマ字表示（入力済=ハイライト、未入力=グレー） |
@@ -59,45 +60,75 @@
 
 ## 2. ゲームプレイ & アニメーション詳細仕様
 
-### 2.1 基本ゲームループ (FR-001)
-1. **問題生成**: 選択された難易度に対応する問題プールからランダムに1問抽出。
-2. **資材選定**: 7種類の仮設足場資材からランダムに1種類を選択し、フォークリフトの爪の上に描画。
-3. **フォークリフト走行**: 画面左端（X = 5%）から右端のトラック前（X = 75%）に向かって等速走行を開始。
-   - 移動時間（タイムリミット）: 初級=8.0秒, 中級=6.0秒, 上級=4.5秒（Config設定値）。
-4. **入力受付**: 走行中にプレイヤーのキーボード入力を捕捉し、文字照合を実施。
-5. **到達判定**:
-   - トラック到達前に入力完了 ➔ **SUCCESS Flow (2.2項)**
-   - 入力完了前にトラック到達 ➔ **MISS Flow (2.3項)**
+### 2.1 2つの独立タイマー概念 (FR-001, FR-016)
+ゲーム内には以下の独立した2つのタイマーが存在する。
 
-### 2.2 成功アニメーションフロー (SUCCESS Flow: FR-003)
-1. **停止**: フォークリフトがトラック前（X = 75%）で直ちに停止（所要時間: 即時）。
-2. **荷台上上昇 & 移動**: 爪が上部へ15px上昇し、足場資材が放物線状にトラック荷台へスライド移動（所要時間: 250ms）。
-3. **SUCCESS表示**: 車両上部に「SUCCESS!」のポップアップエフェクト表示、COMBOカウント加算、SCORE加算（所要時間: 200ms）。
-4. **背景成長**: 背景建設オブジェクトが1段階成長（所要時間: 同期）。
-5. **次問題セット**: フォークリフトが初期位置（X = 5%）へリセットされ、次の問題と新資材をセットして即座に走行開始（合計遷移時間: 450ms）。
+1. **Global Game Timer（全体ゲームタイマー）**:
+   - 本番1ゲーム全体の残り制限時間（初期値: **90秒**）。
+   - 画面上部ヘッダーにデジタル秒数として表示。
+   - 1問単位のタイムオーバー（MISS）時にペナルティ減算（初級: -3秒, 中級: -4秒, 上級: -5秒）を受ける。
+   - 15 COMBO達成時に TIME BONUS（+5秒）が加算される。
+   - 0秒到達でゲームオーバー（リザルト画面へ遷移）。
+2. **Per-Question Forklift Timer（問題別フォークリフトタイマー）**:
+   - 出題された現在の1問について、フォークリフトが左端（X = 5%）からトラック前（X = 75%）へ到達するまでの時間（`allowedTime`）。
+   - 問題ごとの実効入力文字数と難易度から動的に算出される。
+   - フォークリフトの走行速度は `speed = (70%) / allowedTime` として等速制御される。
 
-### 2.3 失敗アニメーションフロー (MISS Flow: FR-004)
+### 2.2 動的走行時間モデル (Dynamic Timing Model: FR-016)
+
+#### A. 算出式 (Deterministic Formula)
+$$\text{rawAllowedTime} = \text{reactionAllowance} + \left( \frac{\text{effectiveKeystrokes}}{\text{targetKps}} \right)$$
+
+$$\text{allowedTime} = \min\left(\max(\text{rawAllowedTime}, \text{minAllowedTime}), \text{maxAllowedTime}\right)$$
+
+* **練習モードの補正**:
+  - `practiceAllowedTime = allowedTime * practiceMultiplier` （`practiceMultiplier = 1.5`）
+
+#### B. Question Master v3 の文字数分布に基づく難易度別パラメータ
+
+Question Master v3（全180問）のキーストローク数分布：
+* **BEGINNER (初級, 60問)**: Min 2, Median 6, Avg 6.17, Max 11
+* **INTERMEDIATE (中級, 60問)**: Min 3, Median 14, Avg 14.18, Max 32
+* **ADVANCED (上級, 60問)**: Min 31, Median 52, Avg 51.60, Max 76
+
+上記分布に基づく初期 Default 設定パラメータ案（実装時に `src/config/gameConfig.js` として作成予定）：
+
+| 難易度 | 積込対象車両 | ターゲットKPS (`targetKps`) | 反応余裕秒 (`reactionAllowance`) | 最小時間 (`minAllowedTime`) | 最大時間 (`maxAllowedTime`) | 中央値文字数での走行時間 |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| **初級 (Beginner)** | 軽トラック | **2.0** keys/s (120 KPM) | **3.0** 秒 | **4.0** 秒 | **12.0** 秒 | 6.0 秒 (6文字) |
+| **中級 (Intermediate)** | 4tユニック | **3.2** keys/s (192 KPM) | **2.0** 秒 | **3.5** 秒 | **14.0** 秒 | 6.38 秒 (14文字) |
+| **上級 (Advanced)** | 15tユニック | **4.5** keys/s (270 KPM) | **1.5** 秒 | **5.0** 秒 | **20.0** 秒 | 13.06 秒 (52文字) |
+
+#### C. 難易度階層の維持検証 (同一文字数比較例: 20文字)
+* 初級: $3.0 + (20 / 2.0) = 13.0 \rightarrow \mathbf{12.0}$ 秒 (上限クランプ, 最も余裕あり)
+* 中級: $2.0 + (20 / 3.2) = \mathbf{8.25}$ 秒 (標準)
+* 上級: $1.5 + (20 / 4.5) = \mathbf{5.94}$ 秒 (最も厳しい)
+* ➔ 同一文字数において「初級 > 中級 > 上級」の入力可能時間関係が完全に維持される。
+
+### 2.3 基本ゲームループ (FR-001)
+1. **問題生成**: Question Master v3 の該当難易度プール（各60問）からランダム抽出。
+2. **走行時間算出**: 問題の `effectiveKeystrokes` から `allowedTime` を動的計算。
+3. **資材選定**: 7種類の仮設足場資材からランダムに1種類を選択し、爪の上に描画。
+4. **走行 & 入力受付**: フォークリフトが `allowedTime` かけて等速走行。プレイヤーのキー入力を直接捕捉。
+5. **判定**:
+   - `allowedTime` 以内に入力完了 ➔ **SUCCESS Flow (2.4項)**
+   - 入力完了前に `allowedTime` 満了（トラック到達） ➔ **MISS Flow (2.5項)**
+
+### 2.4 成功アニメーションフロー (SUCCESS Flow: FR-003)
+1. **停止**: フォークリフトがトラック前（X = 75%）で直ちに停止。
+2. **荷台上昇 & 移動**: 爪が15px上昇し、足場資材が放物線状に荷台へ移動（所要時間: 250ms）。
+3. **SUCCESS表示**: 「SUCCESS!」ポップアップエフェクト、COMBO加算、SCORE加算（所要時間: 200ms）。
+4. **背景成長**: 背景建設オブジェクトが1段階成長。
+5. **次問題セット**: フォークリフトが初期位置（X = 5%）へリセットされ、新問題・新資材をセットして即座に走行開始（合計遷移時間: 450ms）。
+
+### 2.5 失敗アニメーションフロー (MISS Flow: FR-004)
 1. **接触**: フォークリフトがトラックに到達（X = 78%）。
-2. **振動 & 落下**: 車体と画面全体が左右に5px振動（200ms）し、爪上の足場資材が地面へ回転落下（所要時間: 300ms）。
-3. **MISS表示**: 車両上部にコミカルな「MISS!」表示、COMBOリセット（0へ）。
-4. **ペナルティ適用**: 本番モードの場合、残り制限時間から難易度別ペナルティ（初級: -3秒, 中級: -4秒, 上級: -5秒）を減算。
+2. **振動 & 落下**: 車体と画面全体が左右に5px振動（200ms）し、爪上の資材が地面へ回転落下（所要時間: 300ms）。
+3. **MISS表示**: コミカルな「MISS!」表示、COMBOリセット（0へ）。
+4. **ペナルティ減算**: 本番モードの場合、Global Game Timer から難易度別ペナルティ（初級: -3秒, 中級: -4秒, 上級: -5秒）を減算。
 5. **次問題セット**: フォークリフトが初期位置へ戻り、新しい問題と資材をセットして走行再開（合計遷移時間: 500ms）。
 
-### 2.4 難易度別テーマ & 車両仕様 (FR-005)
-* **初級**:
-  - 積込対象車両: **軽トラック**（白ボディ、小型荷台、親しみやすい2D Pixel Art）
-  - フォークリフト移動時間: 1問あたり 8.0秒
-  - 問題長目安: 2〜6文字（基礎単語・短縮語）
-* **中級**:
-  - 積込対象車両: **4tユニック車**（青/緑系平ボディ、キャブバッククレーン付きPixel Art）
-  - フォークリフト移動時間: 1問あたり 6.0秒
-  - 問題長目安: 5〜12文字（標準用語・複合語）
-* **上級**:
-  - 積込対象車両: **15tユニック車**（大型3軸/4軸車、大型ロング荷台、大型クレーン付きPixel Art）
-  - フォークリフト移動時間: 1問あたり 4.5秒
-  - 問題長目安: 10〜20文字（専門用語・業務文章）
-
-### 2.5 仮設足場資材アセット (FR-007)
+### 2.6 仮設足場資材アセット (FR-007)
 SVG / 2D Canvas によるオリジナルPixel Artアセット（全7種）:
 1. `scaffold_shichu` (支柱: ピン穴付き縦パイプ)
 2. `scaffold_tesuri` (手摺: 横バー・ロック機構)
@@ -105,14 +136,14 @@ SVG / 2D Canvas によるオリジナルPixel Artアセット（全7種）:
 4. `scaffold_nunoita` (布板: アンチ・エキスパンドメタル床板)
 5. `scaffold_sujikai` (筋交: クロスブレース)
 6. `scaffold_jackbase` (ジャッキベース: ハンドル・ベースプレート)
-7. `scaffold_palette` (小物資材パレット: ボルト・クランプ等が入った小型クレート)
+7. `scaffold_palette` (小物資材パレット: ボルト・クランプ等の小型クレート)
 
 ---
 
 ## 3. 背景発展 & EXTRAステージ仕様
 
-### 3.1 通常背景進化ステップ (FR-008, FR-011)
-正解数（累積正解数）に応じて背景の建築物が段階的に組み上がる。
+### 3.1 通常背景進化ステップ (FR-008)
+正解数（累積正解数）に応じて背景の建築物が段階的に成長する（設定値としてConfig化）。
 
 | Stage | 発展段階 | 到達基準 (累積正解数) | 視覚表現 |
 | :---: | :--- | :---: | :--- |
@@ -129,22 +160,24 @@ SVG / 2D Canvas によるオリジナルPixel Artアセット（全7種）:
 
 * **同時表示制限**: 画面過密防止のため、動的オブジェクトは同時に最大3個までに制限。
 * **演出オブジェクト一覧**:
-  1. `Airplane`: Pixel Art旅客機が上空を左から右へ水平横断（速度: 中速、出現率: 30%）。
-  2. `Helicopter`: 小型ヘリがスカイツリー周辺でホバリング＆上下浮遊（ローター回転アニメーション、出現率: 25%）。
-  3. `Balloons`: カラフルな3連風船が下から上へ左右に揺れながら浮上（出現率: 25%）。
-  4. `Skydiving`: 小さなパラシュート降下部隊が上空からゆっくり降下（出現率: 10%のレア演出）。
-  5. `Rainbow`: EXTRA到達時に都市背景の最背面レイヤーに七色の虹がフェードイン表示（常時背景）。
+  1. `Airplane`: Pixel Art旅客機が上空を左から右へ水平横断（出現率: 30%）。
+  2. `Helicopter`: 小型ヘリがスカイツリー周辺でホバリング＆上下浮遊（出現率: 25%）。
+  3. `Balloons`: カラフルな3連風船が下から上へ浮上（出現率: 25%）。
+  4. `Skydiving`: 小さなパラシュート降下部隊がゆっくり降下（出現率: 10%）。
+  5. `Rainbow`: EXTRA到達時に最背面レイヤーに七色の虹がフェードイン表示。
 
 ---
 
 ## 4. タイピングUX & ローマ字入力エンジン仕様 (FR-002)
 
 ### 4.1 キー入力受付仕様
-* **グローバル入力捕捉**: `window.addEventListener('keydown')` でアルファベット（A-Z）、ハイフン（-）、数字等を捕捉。入力フォームへのフォーカス合わせ操作は一切不要。
-* **IME制御**: 原則として直接半角英数入力を捕捉。全角入力時も `e.key` または `keydown` コードから自動正規化。
+* **グローバル入力捕捉**: `window.addEventListener('keydown')` でアルファベット（A-Z）、数字（0-9）、記号（ハイフン `-` 等）を直接捕捉。入力フォームへのフォーカス合わせ操作は一切不要。
+* **英数字・ASCII混在語の扱い**:
+  - `AI`, `TQM`, `2S`, `4M3H`, `OPE-MANE`, `OPERA`, `TLEVER`, `T-Earth`, `Base` 等の英数字部分は、大文字小文字不問（case-insensitive）でそのまま入力可能。
+  - 日本語部分はローマ字変換して入力。
 
 ### 4.2 ローマ字表記ゆれ受理テーブル (Multi-pattern Matching Engine)
-日本語の読みに対して、以下の複数ローマ字入力を完全受理する。
+`RecommendedRomaji` は代表例であり、実際の判定は `Reading`（ひらがな）を基準として以下の複数入力を完全受理する。
 
 * `し`: `shi` / `si` / `ci`
 * `ち`: `chi` / `ti`
@@ -165,7 +198,7 @@ SVG / 2D Canvas によるオリジナルPixel Artアセット（全7種）:
   - 現在入力対象文字: 下線アンダーライン点滅
   - 未入力部分: グレー（`#64748b`）
 * **ミスタイプ時**:
-  - タイプ音が鳴る（または視覚的振動）とともに、入力枠が200ms間赤色（`#ef4444`）にフラッシュ。
+  - 入力枠が200ms間赤色（`#ef4444`）にフラッシュ。
   - COMBOを即時0にリセット。入力文字は進まない。
 
 ---
@@ -185,109 +218,82 @@ $$\text{Score} = \left( \sum (\text{CorrectChars} \times 100 \times \text{ComboM
   - 50 COMBO以上: $2.0\times$
 
 ### 5.2 TIME BONUS 仕様 (FR-010)
-* 連続15 COMBO達成ごとに、残り制限時間に **+5秒** の TIME BONUS を付与。
+* 連続15 COMBO達成ごとに、Global Game Timer に **+5秒** の TIME BONUS を付与。
 * 1ゲーム中でのTIME BONUS累積上限: 最大 **+30秒** まで（無限プレイ化の防止）。
-
-### 5.3 制限時間 & ペナルティ設定
-* 初期制限時間: **90秒**（全難易度共通）
-* タイムオーバー・落下ペナルティ:
-  - 初級: **-3秒**
-  - 中級: **-4秒**
-  - 上級: **-5秒**
 
 ---
 
-## 6. スプレッドシート & データモデル仕様 (FR-012, FR-013, FR-014)
+## 6. データモデル & Question Master v3 仕様 (FR-013, FR-014)
 
-### 6.1 Players シート (プレイヤーマスター)
-| カラム名 | 型 | 必須 | 説明 | 例 |
-| :--- | :--- | :---: | :--- | :--- |
-| `PlayerID` | String | ○ | 一意のプレイヤー識別子 | `PL-001` |
-| `PlayerName` | String | ○ | 画面表示されるプレイヤー氏名 | `足場 太郎` |
-| `Department` | String | - | 所属部署 | `機材管理部` |
-| `Enabled` | Boolean | ○ | 有効フラグ | `TRUE` |
+### 6.1 Question Master v3 仕様 (`data/questions/takamiya-typing-game-master-v3.csv`)
+* **総問題数**: 180問（初級: 60問 / 中級: 60問 / 上級: 60問）
+* **カラム定義**:
+  1. `ID`: 一意の問題ID (`B001`〜`B060`, `I001`〜`I060`, `A001`〜`A060`)
+  2. `Difficulty`: `BEGINNER` / `INTERMEDIATE` / `ADVANCED`
+  3. `Category`: 用語カテゴリ（`足場材`, `業務・作業`, `社内用語`, `安全・スローガン` 等）
+  4. `DisplayText`: 画面表示用の日本語・ASCII混在問題文
+  5. `Reading`: 入力判定の基準となるひらがな・ASCII文字列
+  6. `RecommendedRomaji`: 代表的なローマ字入力例
+  7. `SourceBasis`: 出典・業務根拠
+  8. `Note`: 備考
 
-### 6.2 Scores シート (プレイ履歴 & 本番スコア)
-| カラム名 | 型 | 必須 | 説明 | 例 |
-| :--- | :--- | :---: | :--- | :--- |
-| `ScoreID` | String | ○ | スコア一意ID (UUID/Timestamp) | `SC-20260902-110001` |
-| `PlayerID` | String | ○ | プレイヤーID | `PL-001` |
-| `PlayerNameSnapshot` | String | ○ | 登録時点のプレイヤー名 | `足場 太郎` |
-| `Difficulty` | String | ○ | 難易度 (`beginner`, `intermediate`, `advanced`) | `intermediate` |
-| `Score` | Number | ○ | 最終スコア | `12500` |
-| `CorrectCount` | Number | ○ | 正解問題数 | `15` |
-| `TypedCharacters` | Number | ○ | 総入力文字数 | `120` |
-| `MissCount` | Number | ○ | ミスタイプ数 | `3` |
-| `Accuracy` | Number | ○ | 正確率 (0.00%〜100.00%) | `97.56` |
-| `MaxCombo` | Number | ○ | 最大コンボ数 | `18` |
-| `PlayDuration` | Number | ○ | プレイ実時間 (秒) | `90` |
-| `PlayedAt` | String | ○ | 登録日時 (ISO 8601) | `2026-09-02T11:00:00Z` |
-| `AppVersion` | String | ○ | アプリケーションバージョン | `1.0.0` |
+### 6.2 Players シート (プレイヤーマスター)
+| カラム名 | 型 | 必須 | 説明 |
+| :--- | :--- | :---: | :--- |
+| `PlayerID` | String | ○ | 一意のプレイヤー識別子 (`PL-001`) |
+| `PlayerName` | String | ○ | 画面表示されるプレイヤー氏名 (`足場 太郎`) |
+| `Department` | String | - | 所属部署 (`機材管理部`) |
+| `Enabled` | Boolean | ○ | 有効フラグ (`TRUE`) |
 
-### 6.3 Questions データ構造 (フロント組み込み & GAS取得可能構造)
-```json
-[
-  {
-    "id": "Q-001",
-    "difficulty": "beginner",
-    "category": "material",
-    "displayText": "支柱",
-    "reading": "しちゅう",
-    "defaultRoman": "SHICHUU",
-    "enabled": true
-  },
-  {
-    "id": "Q-002",
-    "difficulty": "intermediate",
-    "category": "safety",
-    "displayText": "安全帯よし",
-    "reading": "あんぜんたいよし",
-    "defaultRoman": "ANZENTAIYOSHI",
-    "enabled": true
-  },
-  {
-    "id": "Q-003",
-    "difficulty": "advanced",
-    "category": "work",
-    "displayText": "次世代足場積込作業完了",
-    "reading": "じせだいあしばつみこみさぎょうかんりょう",
-    "defaultRoman": "JISEDAIASHIBATSUMIKOMISAGYOUKANRYOU",
-    "enabled": true
-  }
-]
-```
+### 6.3 Scores シート (プレイ履歴 & 本番スコア)
+| カラム名 | 型 | 必須 | 説明 |
+| :--- | :--- | :---: | :--- |
+| `ScoreID` | String | ○ | スコア一意ID (`SC-20260902-110001`) |
+| `PlayerID` | String | ○ | プレイヤーID (`PL-001`) |
+| `PlayerNameSnapshot` | String | ○ | 登録時点のプレイヤー名 (`足場 太郎`) |
+| `Difficulty` | String | ○ | 難易度 (`beginner`, `intermediate`, `advanced`) |
+| `Score` | Number | ○ | 最終スコア (`12500`) |
+| `CorrectCount` | Number | ○ | 正解問題数 (`15`) |
+| `TypedCharacters` | Number | ○ | 総入力文字数 (`120`) |
+| `MissCount` | Number | ○ | ミスタイプ数 (`3`) |
+| `Accuracy` | Number | ○ | 正確率 (`97.56`) |
+| `MaxCombo` | Number | ○ | 最大コンボ数 (`18`) |
+| `PlayDuration` | Number | ○ | プレイ実時間 (`90`) |
+| `PlayedAt` | String | ○ | 登録日時 (`2026-09-02T11:00:00Z`) |
+| `AppVersion` | String | ○ | アプリバージョン (`1.0.0`) |
 
 ---
 
 ## 7. ランキング集計ロジック仕様 (FR-012)
 
-1. **集計キー**: `(期間フィルター) × (Difficulty)`
-2. **期間フィルター**:
-   - `今月 (Monthly)`: `PlayedAt` が現在の月（例: 2026年9月）のデータのみを抽出。
-   - `歴代 (All-Time)`: 全期間のデータを対象とする。
-3. **自己ベスト集約 (Anti-Domination Aggregation)**:
+1. **集計キー**: `(期間フィルター: monthly / allTime) × (Difficulty: beginner / intermediate / advanced)`
+2. **自己ベスト集約 (Anti-Domination Aggregation)**:
    - 同一 `PlayerID` のレコードが複数存在する場合、`Score` が最大の1レコードのみを採用。
    - スコア同点の場合は `Accuracy` が高い方を優先し、それも同じ場合は `PlayedAt` が新しい方を優先。
-4. **表示件数**: 各カテゴリ上位20件（Top 20）を表示。
+3. **表示件数**: 各カテゴリ上位20件（Top 20）を表示。
 
 ---
 
-## 8. ゲーム設定マスター (GAME_CONFIG)
-全設定値は `src/config/gameConfig.js`（または定数モジュール）として一元管理され、コード変更なしに調整可能とする。
+## 8. ゲーム設定モデル (GAME_CONFIG)
+設定値は実装フェーズにおいて `src/config/gameConfig.js` として作成予定であり、以下の定数構造を持つ。
 
 ```javascript
 export const GAME_CONFIG = {
-  initialTimeSeconds: 90,
+  globalGameTimeSeconds: 90,
   maxTimeBonusTotal: 30,
   timeBonusPerCombo: 5,
   comboThresholdForBonus: 15,
+  practiceMultiplier: 1.5,
   topRankingLimit: 20,
   difficulties: {
     beginner: {
       id: "beginner",
       displayName: "初級",
       vehicleName: "軽トラック",
-      forkliftTravelSeconds: 8.0,
+      targetKps: 2.0,
+      reactionAllowance: 3.0,
+      minAllowedTime: 4.0,
+      maxAllowedTime: 12.0,
       missPenaltySeconds: 3,
       materialTypes: ["scaffold_shichu", "scaffold_tesuri", "scaffold_jackbase"]
     },
@@ -295,7 +301,10 @@ export const GAME_CONFIG = {
       id: "intermediate",
       displayName: "中級",
       vehicleName: "4tユニック",
-      forkliftTravelSeconds: 6.0,
+      targetKps: 3.2,
+      reactionAllowance: 2.0,
+      minAllowedTime: 3.5,
+      maxAllowedTime: 14.0,
       missPenaltySeconds: 4,
       materialTypes: ["scaffold_shichu", "scaffold_tesuri", "scaffold_tatewaku", "scaffold_nunoita", "scaffold_sujikai"]
     },
@@ -303,7 +312,10 @@ export const GAME_CONFIG = {
       id: "advanced",
       displayName: "上級",
       vehicleName: "15tユニック",
-      forkliftTravelSeconds: 4.5,
+      targetKps: 4.5,
+      reactionAllowance: 1.5,
+      minAllowedTime: 5.0,
+      maxAllowedTime: 20.0,
       missPenaltySeconds: 5,
       materialTypes: ["scaffold_shichu", "scaffold_tesuri", "scaffold_tatewaku", "scaffold_nunoita", "scaffold_sujikai", "scaffold_jackbase", "scaffold_palette"]
     }
