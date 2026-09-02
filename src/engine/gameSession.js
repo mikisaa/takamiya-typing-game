@@ -186,7 +186,21 @@ export class GameSession {
       // Mistype occurred: increment mistake count and reset combo
       this.typingMistakeCount += 1;
       this.currentCombo = 0;
-      return { accepted: false, isMistake: true, isComplete: false };
+
+      // In Production mode: apply difficulty specific typing mistake penalty from Global Timer
+      let appliedPenalty = 0;
+      if (this.mode === GAME_MODES.PRODUCTION) {
+        const diffConfig = getDifficultyConfig(this.difficulty, this.config);
+        appliedPenalty = diffConfig.typingMistakePenaltySeconds || 0.5;
+        this.globalTimeRemaining = Math.max(0, this.globalTimeRemaining - appliedPenalty);
+
+        // If penalty exhausts remaining global time, immediately finish game session
+        if (this.globalTimeRemaining === 0) {
+          this.finishSession();
+        }
+      }
+
+      return { accepted: false, isMistake: true, isComplete: false, penaltySeconds: appliedPenalty };
     }
   }
 
@@ -261,31 +275,27 @@ export class GameSession {
       effectiveKeystrokes: this.currentTypingEngine?.effectiveKeystrokes || 0
     });
 
+    // Transition to MISS_FEEDBACK
     this.state = GAME_STATES.MISS_FEEDBACK;
     this.feedbackTimer = this.feedbackDuration;
-
-    // If global timer expired due to penalty
-    if (this.mode === GAME_MODES.PRODUCTION && this.globalTimeRemaining <= 0) {
-      this.globalTimeRemaining = 0;
-      this.finishSession();
-    }
   }
 
   /**
-   * Finishes session and generates final result
+   * Finishes session and marks timestamp
    */
   finishSession() {
     this.finishedAt = new Date();
-    this.state = this.mode === GAME_MODES.PRACTICE ? GAME_STATES.PRACTICE_RESULT : GAME_STATES.RESULT;
+    this.state = this.mode === GAME_MODES.PRODUCTION ? GAME_STATES.RESULT : GAME_STATES.PRACTICE_RESULT;
   }
 
   /**
-   * Gets normalized Forklift Travel Progress (0.00 at left to 1.00 at truck)
+   * Returns normalized forklift progress (0.0 to 1.0)
+   * 0.0 = Start line, 1.0 = Destination (Truck contact)
    * @returns {number}
    */
   getForkliftProgress() {
-    if (this.perQuestionAllowedTime <= 0) return 0;
-    const progress = 1 - (this.perQuestionTimeRemaining / this.perQuestionAllowedTime);
+    if (!this.perQuestionAllowedTime || this.perQuestionAllowedTime <= 0) return 0;
+    const progress = 1.0 - this.perQuestionTimeRemaining / this.perQuestionAllowedTime;
     return Math.min(1, Math.max(0, Number(progress.toFixed(3))));
   }
 
@@ -308,7 +318,7 @@ export class GameSession {
    */
   getSummary() {
     const finalScore = this.getCurrentScore();
-    const accuracy = calculateAccuracy(this.typedCharacterCount, this.typingMistakeCount);
+    const accuracyPercent = calculateAccuracy(this.typedCharacterCount, this.typingMistakeCount);
     const { kpm, wpm } = calculateTypingSpeed(this.typedCharacterCount, this.globalTimeElapsed);
     const bgInfo = getBackgroundStage(this.correctCount, this.config);
 
@@ -321,7 +331,12 @@ export class GameSession {
       typingMistakeCount: this.typingMistakeCount,
       typedCharacterCount: this.typedCharacterCount,
       maxCombo: this.maxCombo,
-      accuracy,
+      accuracy: {
+        typed: this.typedCharacterCount,
+        mistakes: this.typingMistakeCount,
+        percent: accuracyPercent
+      },
+      accuracyPercent,
       kpm,
       wpm,
       playDurationSeconds: Number(this.globalTimeElapsed.toFixed(1)),

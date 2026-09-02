@@ -292,8 +292,8 @@ function renderResultScreen() {
   metricCorrect.textContent = `${summary.correctCount} 問`;
   metricMiss.textContent = `${summary.missCount} 回`;
   metricMistakes.textContent = `${summary.typingMistakeCount} 回`;
-  metricChars.textContent = `${summary.typedCharacterCount} 文字`;
-  metricAccuracy.textContent = `${summary.accuracy.percent}%`;
+  const accVal = summary.accuracyPercent ?? (typeof summary.accuracy === "object" ? summary.accuracy.percent : summary.accuracy);
+  metricAccuracy.textContent = `${Number(accVal || 100).toFixed(1)}%`;
   metricMaxCombo.textContent = `${summary.maxCombo} COMBO`;
   metricSpeed.textContent = `${summary.kpm} KPM / ${summary.wpm} WPM`;
   metricBgStage.textContent = summary.backgroundStage.displayName;

@@ -27,6 +27,7 @@ export class GameVisualScene {
     this.visualState = VISUAL_STATES.IDLE;
     this.difficulty = "BEGINNER";
     this.truckType = getTruckTypeForDifficulty(this.difficulty);
+    this.truckLoadStage = 0; // 0 to 5
 
     // Coordinate constants
     this.START_X = 15;
@@ -40,13 +41,13 @@ export class GameVisualScene {
     this.bodyBobY = 0;
     this.forkLiftY = 0;
     this.currentLoadType = getRandomScaffoldLoad();
-    this.truckSettledLoads = []; // Array of { type, x, y, id }
-    this.nextLoadId = 1;
 
     // Feedback animation timing
     this.animElapsed = 0;
     this.isForkliftShaking = false;
     this.isTruckShaking = false;
+    this.truckPopScale = 1.0;
+    this.truckPopFloatY = 0;
     this.activeEffect = null; // { type: 'SPARK'|'BURST', x, y }
 
     // Falling load state during MISS
@@ -71,9 +72,6 @@ export class GameVisualScene {
         <!-- Truck Container (Right docked) -->
         <div id="visualTruckLayer" class="scene-truck-layer"></div>
 
-        <!-- Settled Loads on Truck -->
-        <div id="visualTruckLoadsLayer" class="scene-truck-loads-layer"></div>
-
         <!-- Forklift Container -->
         <div id="visualForkliftLayer" class="scene-forklift-layer"></div>
 
@@ -86,26 +84,25 @@ export class GameVisualScene {
     `;
 
     this.truckLayer = this.container.querySelector("#visualTruckLayer");
-    this.truckLoadsLayer = this.container.querySelector("#visualTruckLoadsLayer");
     this.forkliftLayer = this.container.querySelector("#visualForkliftLayer");
     this.activeLoadLayer = this.container.querySelector("#visualActiveLoadLayer");
     this.effectsLayer = this.container.querySelector("#visualEffectsLayer");
   }
 
   /**
-   * Configures scene for new game difficulty
+   * Configures scene for new game difficulty and resets truck loading stage to 0
    * @param {string} difficulty - "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
    */
   setDifficulty(difficulty = "BEGINNER") {
     this.difficulty = difficulty.toUpperCase();
     this.truckType = getTruckTypeForDifficulty(this.difficulty);
-    this.truckSettledLoads = [];
+    this.truckLoadStage = 0;
     this.resetForNewQuestion();
     this.renderTruck();
   }
 
   /**
-   * Resets scene elements for the next question
+   * Resets scene elements for the next question (preserves truckLoadStage)
    */
   resetForNewQuestion() {
     this.visualState = VISUAL_STATES.RUN;
@@ -114,6 +111,8 @@ export class GameVisualScene {
     this.forkLiftY = 0;
     this.isForkliftShaking = false;
     this.isTruckShaking = false;
+    this.truckPopScale = 1.0;
+    this.truckPopFloatY = 0;
     this.activeEffect = null;
     this.fallingLoad = null;
     this.currentLoadType = getRandomScaffoldLoad(this.currentLoadType);
@@ -121,11 +120,23 @@ export class GameVisualScene {
   }
 
   /**
-   * Triggers SUCCESS animation sequence
+   * Triggers SUCCESS animation sequence:
+   * - Increments truck flatbed loadStage (up to max 5)
+   * - Keeps load on forklift (REMAINS_ON_FORK, no arc flying)
+   * - Triggers truck pop & pixel sparkle
    */
   triggerSuccess() {
     this.visualState = VISUAL_STATES.SUCCESS_LOAD;
     this.animElapsed = 0;
+    this.truckLoadStage = Math.min(5, this.truckLoadStage + 1);
+
+    // Sparkle effect position near truck flatbed
+    const sparkX = this.difficulty === "ADVANCED" ? 690 : this.difficulty === "INTERMEDIATE" ? 730 : 760;
+    this.activeEffect = {
+      type: "SPARK",
+      x: sparkX,
+      y: 60
+    };
   }
 
   /**
@@ -165,7 +176,7 @@ export class GameVisualScene {
     if (gameState === "PLAYING" && this.visualState === VISUAL_STATES.RUN) {
       this.currentProgress = Math.min(1.0, Math.max(0, normalizedProgress));
 
-      // Update wheel animation (2 frames per sec relative to movement)
+      // Update wheel animation (2-3 frames per sec relative to movement)
       this.wheelTimer += deltaSeconds;
       if (this.wheelTimer >= 0.08) {
         this.wheelTimer = 0;
@@ -175,39 +186,25 @@ export class GameVisualScene {
       }
     }
 
-    // 2. Handle SUCCESS animation sequence (~450ms)
+    // 2. Handle SUCCESS animation sequence (~350-450ms)
     if (this.visualState === VISUAL_STATES.SUCCESS_LOAD) {
       this.animElapsed += deltaSeconds;
       const t = this.animElapsed;
 
-      // Stage 1: 0 - 120ms (Fork lift up 6px)
-      if (t <= 0.12) {
-        this.forkLiftY = (t / 0.12) * 6;
+      // Truck gentle pop & float motion
+      if (t <= 0.35) {
+        const p = t / 0.35;
+        const popFactor = Math.sin(p * Math.PI);
+        this.truckPopScale = 1.0 + popFactor * 0.035;
+        this.truckPopFloatY = -popFactor * 3;
+      } else {
+        this.truckPopScale = 1.0;
+        this.truckPopFloatY = 0;
       }
-      // Stage 2: 120ms - 350ms (Arc transfer load to truck flatbed)
-      else if (t <= 0.35) {
-        this.forkLiftY = 6;
-      }
-      // Stage 3: 350ms+ (Settle on truck flatbed with spark effect)
-      else {
-        if (!this.activeEffect) {
-          const meta = TRUCK_METADATA[this.truckType];
-          this.activeEffect = {
-            type: "SPARK",
-            x: meta.loadTarget.x - 20,
-            y: meta.loadTarget.y - 15
-          };
-          // Add to truck settled loads (keep max 3)
-          this.truckSettledLoads.push({
-            id: this.nextLoadId++,
-            type: this.currentLoadType,
-            x: meta.loadTarget.x - 15 + (this.truckSettledLoads.length % 2) * 8,
-            y: meta.loadTarget.y - Math.min(16, this.truckSettledLoads.length * 6)
-          });
-          if (this.truckSettledLoads.length > 3) {
-            this.truckSettledLoads.shift();
-          }
-        }
+
+      // Sparkle fades out after 350ms
+      if (t >= 0.35) {
+        this.activeEffect = null;
       }
     }
 
@@ -238,23 +235,31 @@ export class GameVisualScene {
    * Renders the complete scene DOM
    */
   render() {
+    this.renderTruck();
     this.renderForklift();
     this.renderActiveLoad();
-    this.renderSettledLoads();
     this.renderEffects();
   }
 
   /**
-   * Renders Truck SVG
+   * Renders Truck SVG with current loadStage (0 to 5) and pop transform
    */
   renderTruck() {
-    this.truckLayer.innerHTML = getTruckSvg(this.truckType, { isShaking: this.isTruckShaking });
+    if (!this.truckLayer) return;
+
+    this.truckLayer.style.transform = `translate(0px, ${this.truckPopFloatY}px) scale(${this.truckPopScale})`;
+    this.truckLayer.innerHTML = getTruckSvg(this.truckType, {
+      loadStage: this.truckLoadStage,
+      isShaking: this.isTruckShaking
+    });
   }
 
   /**
    * Renders Forklift SVG at current position
    */
   renderForklift() {
+    if (!this.forkliftLayer) return;
+
     const forkliftX = this.START_X + this.currentProgress * (this.CONTACT_X - this.START_X);
     const forkliftY = this.GROUND_Y - 44 + this.bodyBobY;
 
@@ -267,9 +272,14 @@ export class GameVisualScene {
   }
 
   /**
-   * Renders active scaffold load (on fork or during transfer/fall)
+   * Renders active scaffold load:
+   * In SUCCESS state: REMAINS ON FORKLIFT (no flying arc)!
+   * In MISS state: Falls forward to ground.
+   * In PLAYING state: Follows forklift.
    */
   renderActiveLoad() {
+    if (!this.activeLoadLayer) return;
+
     // If during MISS collision, render falling load
     if (this.visualState === VISUAL_STATES.COLLISION && this.fallingLoad) {
       this.activeLoadLayer.style.display = "block";
@@ -278,32 +288,7 @@ export class GameVisualScene {
       return;
     }
 
-    // If during SUCCESS transfer (120ms - 350ms), interpolate arc to truck target
-    if (this.visualState === VISUAL_STATES.SUCCESS_LOAD && this.animElapsed > 0.12 && this.animElapsed <= 0.35) {
-      const forkliftX = this.START_X + this.currentProgress * (this.CONTACT_X - this.START_X);
-      const startX = forkliftX + 54;
-      const startY = this.GROUND_Y - 22 - this.forkLiftY;
-      const target = TRUCK_METADATA[this.truckType].loadTarget;
-
-      const progress = (this.animElapsed - 0.12) / (0.35 - 0.12);
-      const curX = startX + progress * (target.x - startX);
-      // Arc curve (lifts upward in middle)
-      const arcY = Math.sin(progress * Math.PI) * 12;
-      const curY = startY + progress * (target.y - startY) - arcY;
-
-      this.activeLoadLayer.style.display = "block";
-      this.activeLoadLayer.style.transform = `translate(${curX}px, ${curY}px)`;
-      this.activeLoadLayer.innerHTML = getScaffoldLoadSvg(this.currentLoadType);
-      return;
-    }
-
-    // If settled on truck, hide active load
-    if (this.visualState === VISUAL_STATES.SUCCESS_LOAD && this.animElapsed > 0.35) {
-      this.activeLoadLayer.style.display = "none";
-      return;
-    }
-
-    // Default: On Forklift Forks
+    // Default & SUCCESS: Load remains comfortably on forklift forks
     const forkliftX = this.START_X + this.currentProgress * (this.CONTACT_X - this.START_X);
     const loadX = forkliftX + 54;
     const loadY = this.GROUND_Y - 22 - this.forkLiftY + this.bodyBobY;
@@ -314,24 +299,11 @@ export class GameVisualScene {
   }
 
   /**
-   * Renders loads accumulated on the truck flatbed
-   */
-  renderSettledLoads() {
-    this.truckLoadsLayer.innerHTML = this.truckSettledLoads
-      .map(
-        (load, idx) => `
-          <div class="settled-load-item" style="position: absolute; left: ${load.x}px; top: ${load.y}px; z-index: ${20 + idx};">
-            ${getScaffoldLoadSvg(load.type, { width: 34, height: 20 })}
-          </div>
-        `
-      )
-      .join("");
-  }
-
-  /**
    * Renders active pixel effects (Sparkles / Bursts)
    */
   renderEffects() {
+    if (!this.effectsLayer) return;
+
     if (!this.activeEffect) {
       this.effectsLayer.innerHTML = "";
       return;

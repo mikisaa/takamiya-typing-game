@@ -13,10 +13,10 @@ import {
   getTruckSvg
 } from "../src/visual/pixel/trucksSvg.js";
 import { getSuccessSparkSvg, getCollisionBurstSvg } from "../src/visual/pixel/effectsSvg.js";
-import { VISUAL_STATES } from "../src/visual/animation/visualScene.js";
+import { VISUAL_STATES, GameVisualScene } from "../src/visual/animation/visualScene.js";
 
 export function runVisualAssetsTests() {
-  console.log("\n=== Testing Pixel Art Visual Assets & Animation Layer ===");
+  console.log("\n=== Testing Pixel Art Visual Assets, Truck Loading Stages & Animation Layer ===");
   let passed = 0;
   let failed = 0;
 
@@ -37,8 +37,8 @@ export function runVisualAssetsTests() {
   // 2. Forklift SVG Sprite
   const forkliftSvg = getForkliftSvg({ wheelFrame: 0, forkLiftY: 0 });
   assert(forkliftSvg.includes("<svg") && forkliftSvg.includes("</svg>"), "getForkliftSvg returns valid SVG markup");
-  assert(forkliftSvg.includes("viewBox=\"0 0 96 56\""), "Forklift has 96x56 viewBox");
-  assert(forkliftSvg.includes("shape-rendering=\"crispEdges\""), "Forklift uses crispEdges rendering");
+  assert(forkliftSvg.includes('viewBox="0 0 96 56"'), "Forklift has 96x56 viewBox");
+  assert(forkliftSvg.includes('shape-rendering="crispEdges"'), "Forklift uses crispEdges rendering");
 
   // Multi-frame test
   const forkF1 = getForkliftSvg({ wheelFrame: 1 });
@@ -71,31 +71,66 @@ export function runVisualAssetsTests() {
   }
   assert(avoidedDup === true, "getRandomScaffoldLoad avoids immediate consecutive duplicate");
 
-  // 4. Trucks by Difficulty
+  // 4. Trucks by Difficulty & Metadata
   assert(getTruckTypeForDifficulty("BEGINNER") === TRUCK_TYPES.KEI_TRUCK, "BEGINNER maps to KEI_TRUCK");
   assert(getTruckTypeForDifficulty("INTERMEDIATE") === TRUCK_TYPES.CRANE_4T, "INTERMEDIATE maps to CRANE_4T");
   assert(getTruckTypeForDifficulty("ADVANCED") === TRUCK_TYPES.CRANE_15T, "ADVANCED maps to CRANE_15T");
 
-  // Metadata & Load Targets
   const metaKei = TRUCK_METADATA[TRUCK_TYPES.KEI_TRUCK];
   const meta4t = TRUCK_METADATA[TRUCK_TYPES.CRANE_4T];
   const meta15t = TRUCK_METADATA[TRUCK_TYPES.CRANE_15T];
-
   assert(metaKei.width < meta4t.width && meta4t.width < meta15t.width, "Truck widths scale with difficulty: Kei < 4t < 15t");
-  assert(typeof metaKei.loadTarget.x === "number" && typeof metaKei.loadTarget.y === "number", "Kei truck has valid loadTarget");
-  assert(typeof meta4t.loadTarget.x === "number" && typeof meta4t.loadTarget.y === "number", "4t truck has valid loadTarget");
-  assert(typeof meta15t.loadTarget.x === "number" && typeof meta15t.loadTarget.y === "number", "15t truck has valid loadTarget");
 
-  // Truck SVG generation
-  assert(getTruckSvg(TRUCK_TYPES.KEI_TRUCK).includes("<svg"), "Kei truck SVG generated");
-  assert(getTruckSvg(TRUCK_TYPES.CRANE_4T).includes("<svg"), "4t crane truck SVG generated");
-  assert(getTruckSvg(TRUCK_TYPES.CRANE_15T).includes("<svg"), "15t crane truck SVG generated");
+  // 5. 5-Level Truck Loading Stages (0 to 5) for all 3 Truck Types
+  for (const truckType of [TRUCK_TYPES.KEI_TRUCK, TRUCK_TYPES.CRANE_4T, TRUCK_TYPES.CRANE_15T]) {
+    const svg0 = getTruckSvg(truckType, { loadStage: 0 });
+    const svg1 = getTruckSvg(truckType, { loadStage: 1 });
+    const svg3 = getTruckSvg(truckType, { loadStage: 3 });
+    const svg5 = getTruckSvg(truckType, { loadStage: 5 });
 
-  // 5. Effects SVG
+    assert(svg0.includes("<svg"), `${truckType} stage 0 generates valid SVG`);
+    assert(svg1.includes("<svg"), `${truckType} stage 1 generates valid SVG`);
+    assert(svg3.includes("<svg"), `${truckType} stage 3 generates valid SVG`);
+    assert(svg5.includes("<svg"), `${truckType} stage 5 generates valid SVG`);
+    assert(svg0 !== svg1, `${truckType} stage 1 adds visible load over stage 0`);
+    assert(svg1 !== svg5, `${truckType} stage 5 has fuller load than stage 1`);
+  }
+
+  // 6. Visual Scene Coordinator Loading State Progression
+  // Mock dummy container for Node environment
+  const mockContainer = {
+    innerHTML: "",
+    querySelector: () => ({ style: {}, innerHTML: "" })
+  };
+  const scene = new GameVisualScene(mockContainer);
+
+  assert(scene.truckLoadStage === 0, "Initial truckLoadStage is 0");
+  scene.triggerSuccess();
+  assert(scene.truckLoadStage === 1, "After 1st SUCCESS, truckLoadStage is 1");
+  scene.triggerSuccess();
+  assert(scene.truckLoadStage === 2, "After 2nd SUCCESS, truckLoadStage is 2");
+  scene.triggerSuccess();
+  assert(scene.truckLoadStage === 3, "After 3rd SUCCESS, truckLoadStage is 3");
+  scene.triggerSuccess();
+  assert(scene.truckLoadStage === 4, "After 4th SUCCESS, truckLoadStage is 4");
+  scene.triggerSuccess();
+  assert(scene.truckLoadStage === 5, "After 5th SUCCESS, truckLoadStage is 5");
+  scene.triggerSuccess();
+  assert(scene.truckLoadStage === 5, "After 6th+ SUCCESS, truckLoadStage remains clamped at 5");
+
+  // MISS does not decrement loadStage
+  scene.triggerMiss();
+  assert(scene.truckLoadStage === 5, "MISS collision does not decrement truckLoadStage");
+
+  // Resetting for difficulty / new session resets loadStage to 0
+  scene.setDifficulty("INTERMEDIATE");
+  assert(scene.truckLoadStage === 0, "setDifficulty resets truckLoadStage to 0");
+
+  // 7. Effects SVG
   assert(getSuccessSparkSvg().includes("<svg"), "Success spark SVG generated");
   assert(getCollisionBurstSvg().includes("<svg"), "Collision burst SVG generated");
 
-  // 6. Visual States
+  // 8. Visual States
   assert(VISUAL_STATES.IDLE === "IDLE", "Visual state IDLE exists");
   assert(VISUAL_STATES.RUN === "RUN", "Visual state RUN exists");
   assert(VISUAL_STATES.SUCCESS_LOAD === "SUCCESS_LOAD", "Visual state SUCCESS_LOAD exists");

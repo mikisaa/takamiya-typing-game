@@ -23,6 +23,7 @@ export const GAME_CONFIG = {
       minAllowedTime: 4.0,
       maxAllowedTime: 12.0,
       missPenaltySeconds: 3,
+      typingMistakePenaltySeconds: 0.50,
       materialTypes: ["scaffold_shichu", "scaffold_tesuri", "scaffold_jackbase"]
     },
     intermediate: {
@@ -34,6 +35,7 @@ export const GAME_CONFIG = {
       minAllowedTime: 3.5,
       maxAllowedTime: 14.0,
       missPenaltySeconds: 4,
+      typingMistakePenaltySeconds: 0.75,
       materialTypes: ["scaffold_shichu", "scaffold_tesuri", "scaffold_tatewaku", "scaffold_nunoita", "scaffold_sujikai"]
     },
     advanced: {
@@ -45,6 +47,7 @@ export const GAME_CONFIG = {
       minAllowedTime: 5.0,
       maxAllowedTime: 20.0,
       missPenaltySeconds: 5,
+      typingMistakePenaltySeconds: 1.00,
       materialTypes: [
         "scaffold_shichu",
         "scaffold_tesuri",

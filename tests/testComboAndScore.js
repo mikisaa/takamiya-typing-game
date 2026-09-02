@@ -34,12 +34,10 @@ export function runComboAndScoreTests() {
   assert(getComboMultiplier(50) === 2.0, "50 combo -> 2.0x multiplier");
 
   // Test 2: Single question score
-  // 10 chars at combo 10 (1.2x) -> 10 * 100 * 1.2 = 1200
   const score1 = calculateQuestionScore(10, 10);
   assert(score1 === 1200, `10 chars at combo 10: expected 1200, got ${score1}`);
 
   // Test 3: Final score calculation with time bonus & miss penalty
-  // Base 5000, 30s remaining, 2 misses -> 5000 + (30 * 50) - (2 * 20) = 5000 + 1500 - 40 = 6460
   const final1 = calculateFinalScore({
     accumulatedQuestionScore: 5000,
     remainingSeconds: 30,
@@ -55,17 +53,18 @@ export function runComboAndScoreTests() {
   });
   assert(clampedFinal === 0, "Final score clamped to >= 0");
 
-  // Test 4: Accuracy calculation
+  // Test 4: Accuracy calculation & formatting
   assert(calculateAccuracy(100, 0) === 100.0, "100 chars, 0 mistakes = 100%");
   assert(calculateAccuracy(90, 10) === 90.0, "90 chars, 10 mistakes = 90%");
   assert(calculateAccuracy(0, 0) === 100.0, "0 attempts defaults to 100%");
+  assert(calculateAccuracy(49, 1) === 98.0, "49 chars, 1 mistake = 98.0%");
 
   // Test 5: Typing speed (WPM / KPM)
-  const speed = calculateTypingSpeed(300, 60); // 300 chars in 1 min -> 300 KPM / 60 WPM
+  const speed = calculateTypingSpeed(300, 60);
   assert(speed.kpm === 300, `KPM expected 300, got ${speed.kpm}`);
   assert(speed.wpm === 60.0, `WPM expected 60.0, got ${speed.wpm}`);
 
-  // Test 6: Combo tracking & Mistake reset in GameSession
+  // Test 6: In-Session Metrics & Summary Model (Production)
   const session = new GameSession({
     mode: GAME_MODES.PRODUCTION,
     difficulty: DIFFICULTY_LEVELS.BEGINNER,
@@ -73,23 +72,44 @@ export function runComboAndScoreTests() {
   });
   session.startPlaying();
 
-  // Type correct keys for first question
-  const target1 = session.currentTypingEngine.canonicalTarget;
-  for (const char of target1) {
-    session.handleInput(char);
+  // Type 1st char correctly
+  const q = session.currentQuestion;
+  const firstChar = q.canonicalTarget[0].toLowerCase();
+  const res1 = session.handleInput(firstChar);
+  assert(res1.accepted === true, "Valid first key accepted");
+
+  // Complete entire question
+  for (let i = 1; i < q.canonicalTarget.length; i++) {
+    session.handleInput(q.canonicalTarget[i].toLowerCase());
   }
 
   assert(session.correctCount === 1, "Correct count is 1 after completion");
   assert(session.currentCombo === 1, "Combo is 1 after first success");
 
-  // Advance past feedback delay to spawn next question
-  session.tick(0.5);
-
-  // Trigger mistake
+  // Type wrong key on next question
+  session.tick(0.6); // advance to PLAYING
   const wrongRes = session.handleInput("!");
   assert(wrongRes.accepted === false, "Wrong key rejected");
   assert(session.typingMistakeCount === 1, "Mistake count is 1");
   assert(session.currentCombo === 0, "Combo reset to 0 upon typing mistake");
+
+  // Summary model verification
+  const prodSummary = session.getSummary();
+  assert(typeof prodSummary.accuracy === "object", "Summary accuracy is an object");
+  assert(typeof prodSummary.accuracy.percent === "number", "Summary accuracy.percent is a valid number");
+  assert(typeof prodSummary.accuracyPercent === "number", "Summary accuracyPercent is a valid number");
+  assert(!isNaN(prodSummary.accuracy.percent), "Summary accuracy.percent is not NaN");
+
+  // Test 7: Practice mode summary accuracy verification
+  const pracSess = new GameSession({
+    mode: GAME_MODES.PRACTICE,
+    difficulty: DIFFICULTY_LEVELS.BEGINNER,
+    questions: DEFAULT_QUESTIONS
+  });
+  pracSess.startPlaying();
+  const pracSummary = pracSess.getSummary();
+  assert(pracSummary.accuracy.percent === 100.0, "Initial practice accuracy is 100.0%");
+  assert(typeof pracSummary.accuracyPercent === "number", "Practice accuracyPercent is number");
 
   return { passed, failed };
 }

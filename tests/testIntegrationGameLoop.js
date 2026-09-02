@@ -104,7 +104,8 @@ export function runIntegrationGameLoopTest() {
     assert(summary.missCount === 1, "Summary missCount is 1");
     assert(summary.typingMistakeCount === 1, "Summary typingMistakeCount is 1");
     assert(summary.score > 0, `Summary score is positive (got ${summary.score})`);
-    assert(summary.accuracy > 0 && summary.accuracy <= 100, `Summary accuracy valid (${summary.accuracy}%)`);
+    const accPercent = typeof summary.accuracy === "object" ? summary.accuracy.percent : summary.accuracy;
+    assert(accPercent > 0 && accPercent <= 100, `Summary accuracy valid (${accPercent}%)`);
     assert(summary.wpm > 0, `Summary WPM calculated (${summary.wpm} WPM)`);
 
   } catch (err) {
