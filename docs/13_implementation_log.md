@@ -49,3 +49,25 @@
   * ブラウザ実機スモークテスト（初級本番・中級本番・上級本番・練習モード）全4シナリオ正常完了。
 
 ---
+
+## 3. Implementation Phase 2.1: Typing Variant & Mode Copy Correction (2026-09-02)
+
+### 3.1 実装サマリー
+* **Mode Description Copy Correction (`src/index.html`, `src/main.js`)**:
+  * 本番モード説明文を `時間制限90秒` のみに厳格統一。
+  * 練習モード説明文を `時間無制限` のみに厳格統一。
+* **Typing Engine Romaji Variant Expansion (`src/engine/typingEngine.js`)**:
+  * `じ` の複数受理（`ji` / `zi`）を正式対応。
+  * `し` (`shi` / `si` / `ci`)、`ち` (`chi` / `ti`)、`つ` (`tsu` / `tu`)、`ふ` (`fu` / `hu`)。
+  * `しゃ/しゅ/しょ` (`sha/shu/sho` / `sya/syu/syo`)。
+  * `じゃ/じゅ/じょ` (`ja/ju/jo` / `zya/zyu/zyo` / `jya/jyu/jyo`)。
+  * `ちゃ/ちゅ/ちょ` (`cha/chu/cho` / `tya/tyu/tyo` / `cya/cyu/cyo`)。
+  * `ぢ` (`di` / `dji`) と `じ` (`ji` / `zi`)、`づ` (`du` / `dzu`) と `ず` (`zu`) をReading SSOT基準で明確に区別。
+  * ユーザー入力に応じた動的 Display Target の追従（例: 表示 `JIDOUSHA` に対し `z` 入力で `ZIDOUSHA` に自然切り替え、ミスカウント 0 維持）。
+* **Automated & Smoke Tests (`tests/testTypingEngine.js`)**:
+  * 新規バリアントテストおよび実 Question Master 問題（B001, B002, B003, B013, I001, I002, I008, A001 等）を用いた alternate sequence テストを追加。
+  * 合計 426 件の自動テスト全件 PASS（`426 / 426 PASS`）。
+  * 180問 Smoke Test PASS（`180 / 180 PASS`）。
+  * ブラウザ実機スモークテスト（Mode Copy 表示およびバリアントタイピング入力）全項目 PASS。
+
+---

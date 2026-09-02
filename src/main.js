@@ -85,14 +85,14 @@ function showScreen(screenKey) {
 btnStartProduction.addEventListener("click", () => {
   selectedMode = GAME_MODES.PRODUCTION;
   setupModeTitle.textContent = "【本番モード】難易度を選択してください";
-  setupModeDesc.textContent = "90秒の制限時間内にできるだけ多くの足場資材をトラックへ積み込んでください。";
+  setupModeDesc.textContent = "時間制限90秒";
   showScreen("setup");
 });
 
 btnStartPractice.addEventListener("click", () => {
   selectedMode = GAME_MODES.PRACTICE;
   setupModeTitle.textContent = "【練習モード】難易度を選択してください";
-  setupModeDesc.textContent = "走行時間1.5倍の余裕時間でタイピングの練習を行えます（ランキング送信なし）。";
+  setupModeDesc.textContent = "時間無制限";
   showScreen("setup");
 });
 
