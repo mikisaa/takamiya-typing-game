@@ -249,16 +249,19 @@ export function parseReadingToTokens(rawReading) {
  * @returns {string}
  */
 export function generateCanonicalSequence(tokens) {
+  if (!Array.isArray(tokens) || tokens.length === 0) {
+    return "";
+  }
+
   let result = "";
   for (let idx = 0; idx < tokens.length; idx++) {
     const token = tokens[idx];
     if (token.type === "small_tsu") {
       const nextToken = tokens[idx + 1];
-      if (nextToken && (nextToken.type === "kana" || nextToken.type === "n")) {
-        const nextFirstOption = nextToken.options[0];
-        const firstConsonant = nextFirstOption[0];
-        if (/[bcdfghjklmnpqrstvwxyz]/i.test(firstConsonant)) {
-          result += firstConsonant;
+      if (nextToken) {
+        const nextFirst = nextToken.options[0][0].toLowerCase();
+        if (nextFirst >= "a" && nextFirst <= "z" && !["a", "i", "u", "e", "o"].includes(nextFirst)) {
+          result += nextFirst;
           continue;
         }
       }
@@ -320,26 +323,23 @@ export class TypingEngine {
       this.question = questionOrReading;
       this.reading = questionOrReading.reading || questionOrReading.displayText || "";
     } else {
-      this.reading = String(questionOrReading || "");
+      this.reading = String(questionOrReading);
     }
 
     this.tokens = parseReadingToTokens(this.reading);
     this.canonicalTarget = generateCanonicalSequence(this.tokens);
     this.effectiveKeystrokes = this.canonicalTarget.length;
-
-    // Initialize all possible valid typing sequences
     this.activePaths = this._generateAllPaths(this.tokens);
-    if (this.activePaths.length === 0) {
-      this.activePaths = [this.canonicalTarget.toLowerCase()];
-    }
   }
 
   /**
-   * Generates all valid typing paths from tokens (with reasonable combinatorial limits)
+   * Generates all valid typing paths for given tokens (including double consonants, alternate romanizations)
    * @param {Array<object>} tokens
    * @returns {Array<string>}
    */
   _generateAllPaths(tokens) {
+    if (tokens.length === 0) return [""];
+
     let paths = [""];
 
     for (let i = 0; i < tokens.length; i++) {
@@ -348,34 +348,26 @@ export class TypingEngine {
       let options = [];
 
       if (token.type === "small_tsu") {
-        if (nextToken && nextToken.options) {
-          const nextConsonants = new Set();
-          for (const opt of nextToken.options) {
-            const firstChar = opt[0].toLowerCase();
-            if (/[bcdfghjklmnpqrstvwxyz]/.test(firstChar)) {
-              nextConsonants.add(firstChar);
-            }
-          }
-          for (const c of nextConsonants) {
+        if (nextToken) {
+          const nextFirstChars = new Set(
+            nextToken.options.map((o) => o[0].toLowerCase()).filter((c) => c >= "a" && c <= "z" && !["a", "i", "u", "e", "o"].includes(c))
+          );
+          for (const c of nextFirstChars) {
             options.push(c);
           }
         }
         options.push("xtsu", "ltu", "xtu");
       } else if (token.type === "n") {
-        let allowSingleN = false;
         if (!nextToken) {
-          allowSingleN = true;
-        } else {
-          const nextStarts = nextToken.options.map((o) => o[0].toLowerCase());
-          const hasVowelOrYorN = nextStarts.some((c) => ["a", "i", "u", "e", "o", "y", "n"].includes(c));
-          if (!hasVowelOrYorN) {
-            allowSingleN = true;
-          }
-        }
-        if (allowSingleN) {
           options = ["n", "nn", "xn"];
         } else {
-          options = ["nn", "xn"];
+          const nextFirstChars = nextToken.options.map((o) => o[0].toLowerCase());
+          const hasConsonantPrefix = nextFirstChars.some((c) => !["a", "i", "u", "e", "o", "y", "n"].includes(c));
+          if (hasConsonantPrefix) {
+            options = ["n", "nn", "xn"];
+          } else {
+            options = ["nn", "xn"];
+          }
         }
       } else if (token.type === "ascii") {
         options = [token.raw.toLowerCase()];
@@ -390,7 +382,7 @@ export class TypingEngine {
           newPaths.push(prefix + opt);
         }
       }
-      paths = newPaths.length > 2000 ? newPaths.slice(0, 2000) : newPaths;
+      paths = newPaths.length > 2500 ? newPaths.slice(0, 2500) : newPaths;
     }
 
     return paths;
@@ -420,46 +412,46 @@ export class TypingEngine {
       this.typedSoFar = candidateTyped;
       this.activePaths = matchingPaths;
 
-      // Check if exact match reached
-      const exactMatch = matchingPaths.some((path) => path === this.typedSoFar);
-      if (exactMatch) {
+      // Check if exact match reached on any complete path
+      if (matchingPaths.some((p) => p === candidateTyped)) {
         this.isComplete = true;
       }
 
       return {
         accepted: true,
+        isComplete: this.isComplete,
         ...this.getState()
       };
     } else {
-      // Key rejected (Mistake)
+      // Key rejected!
       this.mistakeCount += 1;
       return {
         accepted: false,
+        isComplete: false,
         ...this.getState()
       };
     }
   }
 
   /**
-   * Gets current state snapshot
+   * Returns current snapshot of typing state
    * @returns {object}
    */
   getState() {
-    const currentPath = (this.activePaths[0] || this.canonicalTarget).toUpperCase();
+    const currentBestPath = this.activePaths[0] || this.canonicalTarget.toLowerCase();
+    const currentTarget = currentBestPath.toUpperCase();
     const typedUpper = this.typedSoFar.toUpperCase();
-    const remainingUpper = currentPath.slice(this.typedSoFar.length);
+    const remainingUpper = currentTarget.slice(typedUpper.length);
 
     return {
       isComplete: this.isComplete,
       typedSoFar: typedUpper,
-      currentTarget: currentPath,
+      currentTarget,
       remainingTarget: remainingUpper,
-      typedLength: this.typedSoFar.length,
-      targetLength: currentPath.length,
-      effectiveKeystrokes: this.effectiveKeystrokes,
+      typedLength: typedUpper.length,
+      targetLength: currentTarget.length,
       mistakeCount: this.mistakeCount,
-      reading: this.reading,
-      displayText: this.question?.displayText || this.reading
+      effectiveKeystrokes: this.effectiveKeystrokes
     };
   }
 }

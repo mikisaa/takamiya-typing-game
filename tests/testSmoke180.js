@@ -1,6 +1,6 @@
 import path from "path";
 import { fileURLToPath } from "url";
-import { loadQuestionsFromFile } from "../src/data/questionLoader.js";
+import { loadQuestionsFromFile } from "../src/data/nodeQuestionLoader.js";
 import { TypingEngine } from "../src/engine/typingEngine.js";
 import { calculateAllowedTime } from "../src/engine/timingEngine.js";
 
@@ -10,69 +10,68 @@ const CSV_PATH = path.resolve(__dirname, "../data/questions/takamiya-typing-game
 
 export function runSmoke180Test() {
   console.log("\n=== Testing Real Question Master Smoke Test (180 Questions) ===");
+  let passed = 0;
+  let failed = 0;
+
+  function assert(condition, message) {
+    if (condition) {
+      passed++;
+    } else {
+      console.error(`  FAIL: ${message}`);
+      failed++;
+    }
+  }
 
   const questions = loadQuestionsFromFile(CSV_PATH);
   console.log(`Loaded ${questions.length} questions from ${CSV_PATH}`);
 
-  let passCount = 0;
-  let failCount = 0;
-  const failedIds = [];
+  const failedQuestions = [];
 
-  for (const q of questions) {
+  for (let i = 0; i < questions.length; i++) {
+    const q = questions[i];
     try {
-      // 1. Initialize TypingEngine with Question
+      // 1. Initialize engine
       const engine = new TypingEngine(q);
-      const state = engine.getState();
 
-      if (!state.currentTarget || state.currentTarget.length === 0) {
-        throw new Error(`Empty target generated for question ${q.id}`);
+      // 2. Validate canonical sequence
+      const target = engine.canonicalTarget;
+      if (!target || target.length === 0) {
+        throw new Error(`Canonical target is empty for question ${q.id} ("${q.displayText}")`);
       }
 
-      if (typeof state.effectiveKeystrokes !== "number" || state.effectiveKeystrokes <= 0) {
-        throw new Error(`Invalid effectiveKeystrokes (${state.effectiveKeystrokes}) for question ${q.id}`);
+      if (engine.effectiveKeystrokes !== target.length) {
+        throw new Error(`effectiveKeystrokes mismatch for ${q.id}: engine has ${engine.effectiveKeystrokes}, target has ${target.length}`);
       }
 
-      // 2. Calculate allowed time
-      const allowedTime = calculateAllowedTime(q.difficulty, state.effectiveKeystrokes);
-      if (typeof allowedTime !== "number" || isNaN(allowedTime) || allowedTime <= 0) {
-        throw new Error(`Invalid allowedTime (${allowedTime}) for question ${q.id}`);
+      // 3. Validate timing calculation
+      const allowedTime = calculateAllowedTime(q.difficulty, engine.effectiveKeystrokes);
+      if (typeof allowedTime !== "number" || allowedTime <= 0 || isNaN(allowedTime)) {
+        throw new Error(`Invalid allowedTime calculated for question ${q.id}: ${allowedTime}`);
       }
 
-      // 3. Simulate typing the target sequence
-      const targetSeq = state.currentTarget;
-      for (const char of targetSeq) {
+      // 4. Simulate typing canonical sequence
+      for (const char of target) {
         const res = engine.inputKey(char);
         if (!res.accepted) {
-          throw new Error(`Key '${char}' was rejected while typing target '${targetSeq}' for question ${q.id}`);
+          throw new Error(`Rejected valid canonical character "${char}" at index ${engine.typedLength} for question ${q.id} ("${q.displayText}")`);
         }
       }
 
-      const finalState = engine.getState();
-      if (!finalState.isComplete) {
-        throw new Error(`Engine did not mark question ${q.id} as complete after typing all characters of '${targetSeq}'`);
+      if (!engine.isComplete) {
+        throw new Error(`Typing simulation did not reach completion for question ${q.id} ("${q.displayText}")`);
       }
 
-      if (finalState.mistakeCount !== 0) {
-        throw new Error(`Unexpected mistakeCount (${finalState.mistakeCount}) for question ${q.id}`);
-      }
-
-      passCount++;
+      assert(true, `Question ${q.id} PASS`);
     } catch (err) {
-      failCount++;
-      failedIds.push({ id: q.id, displayText: q.displayText, reading: q.reading, error: err.message });
-      console.error(`  FAIL [${q.id}]: ${err.message}`);
+      failedQuestions.push({ id: q.id, displayText: q.displayText, error: err.message });
+      assert(false, `Question ${q.id} FAIL: ${err.message}`);
     }
   }
 
-  console.log(`\nSmoke Test Result: ${passCount} / ${questions.length} PASS`);
-  if (failCount > 0) {
-    console.error(`Failed Questions (${failCount}):`, JSON.stringify(failedIds, null, 2));
+  console.log(`\nSmoke Test Result: ${questions.length - failedQuestions.length} / ${questions.length} PASS`);
+  if (failedQuestions.length > 0) {
+    console.error("Failed Questions Detail:", JSON.stringify(failedQuestions, null, 2));
   }
 
-  return {
-    total: questions.length,
-    passed: passCount,
-    failed: failCount,
-    failedIds
-  };
+  return { passed, failed };
 }

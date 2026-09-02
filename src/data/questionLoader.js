@@ -1,4 +1,3 @@
-import fs from "fs";
 import { parseReadingToTokens, generateCanonicalSequence } from "../engine/typingEngine.js";
 
 /**
@@ -36,7 +35,7 @@ export function parseCsvLine(line) {
 }
 
 /**
- * Parses raw CSV content into validated Question model objects.
+ * Parses raw CSV content string into validated Question model objects.
  * @param {string} csvContent
  * @returns {Array<object>}
  */
@@ -136,19 +135,6 @@ export function parseCsvContent(csvContent) {
   }
 
   return questions;
-}
-
-/**
- * Loads and parses Question Master CSV from local file path.
- * @param {string} filePath
- * @returns {Array<object>}
- */
-export function loadQuestionsFromFile(filePath) {
-  if (!fs.existsSync(filePath)) {
-    throw new Error(`Question Master file not found at path: ${filePath}`);
-  }
-  const content = fs.readFileSync(filePath, "utf-8");
-  return parseCsvContent(content);
 }
 
 /**

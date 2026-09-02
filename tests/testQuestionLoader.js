@@ -2,10 +2,10 @@ import path from "path";
 import { fileURLToPath } from "url";
 import {
   parseCsvContent,
-  loadQuestionsFromFile,
   filterQuestionsByDifficulty,
   validateQuestionDataset
 } from "../src/data/questionLoader.js";
+import { loadQuestionsFromFile } from "../src/data/nodeQuestionLoader.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
