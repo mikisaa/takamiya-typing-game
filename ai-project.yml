@@ -1,0 +1,45 @@
+﻿schema_version: 1
+
+project:
+  name: base-typing-game
+  type: web-app
+
+environment:
+  primary: home-main
+
+features:
+  - gas
+  - google-sheets
+  - github-pages
+
+profiles:
+  design:
+    - web-standard
+  technology:
+    - browser-webapp
+    - github-pages-gas
+
+workflows:
+  - web-app-development
+
+agents:
+  implementation: antigravity
+  review: codex
+
+documents:
+  - 00_project_overview.md
+  - 01_requirements.md
+  - 02_spec.md
+  - 03_architecture.md
+  - 04_security.md
+  - 05_user_flow.md
+  - 06_screen_specifications.md
+  - 07_design.md
+  - 08_acceptance_criteria.md
+  - 09_test_plan.md
+  - 10_tasks.md
+  - 11_decisions.md
+  - 12_review_log.md
+  - 13_implementation_log.md
+  - 14_operation_manual.md
+  - 15_known_issues.md

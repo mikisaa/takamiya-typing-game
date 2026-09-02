@@ -1,0 +1,43 @@
+﻿# セキュリティ・環境変数ファイル (最重要)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 認証情報やAPIキーが含まれるファイル
+*.pem
+*.key
+*.token
+credentials.json
+
+# 依存パッケージ (Node.js)
+node_modules/
+npm-debug.log*
+
+# 依存パッケージ (Python)
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# OS固有の一時ファイル
+.DS_Store
+Thumbs.db
+
+# ログファイル
+*.log
+
+# エディタやIDEの設定
+.vscode/
+.idea/
+.obsidian/workspace.json
+
+# AI Development Core Generated Agent Contexts
+.ai/
+
+# Planning Docs Automation 作業用 Staging & Backup
+docs/.planning-staging/
+docs/.backup_planning_*/
+
+

@@ -1,0 +1,9 @@
+﻿このプロジェクト「base-typing-game」は AI Development Core 方式で管理されています。
+
+作業開始前に、プロジェクト直下の以下の Agent Context を読み込み、指定されている Core / Environment / Agent / Profile / Workflow ルールおよび Project Docs を優先して確認してください。
+
+- .ai/antigravity-context.md
+
+※ .ai/antigravity-context.md が存在しない場合は、AI Development Core の Context Builder (scripts/prompt/build-agent-context.ps1) を使用して Antigravity Context を再生成してから作業を開始してください。
+
+ルールの確認が完了したら、挨拶とともに「AI Development Core ルールの確認が完了しました。最初の仕様整理および開発を開始しましょう」と人間に伝えてください。
