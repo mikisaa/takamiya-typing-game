@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Developer Harness — Base Typing Game (Core Game Foundation)</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --cyan: #00e5ff;
+      --green: #22c55e;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    body { background: var(--bg); color: var(--text); padding: 2rem; min-height: 100vh; }
+    .container { max-width: 900px; margin: 0 auto; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 2rem; }
+    .badge { display: inline-block; padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 4px; background: var(--border); margin-bottom: 1rem; color: var(--amber); }
+    h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    p.desc { color: var(--muted); font-size: 0.875rem; margin-bottom: 1.5rem; line-height: 1.5; }
+    .controls { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    select, button { background: #0f172a; border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+    button:hover { border-color: var(--cyan); }
+    .card { background: #0b1120; border: 1px solid var(--border); border-radius: 6px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .prompt-text { font-size: 1.75rem; font-weight: bold; margin-bottom: 0.75rem; color: #fff; }
+    .reading-text { font-size: 1.1rem; color: var(--muted); margin-bottom: 1rem; }
+    .target-box { font-size: 1.5rem; letter-spacing: 0.1em; padding: 1rem; background: #020617; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 1rem; }
+    .typed { color: var(--cyan); font-weight: bold; }
+    .remaining { color: #64748b; }
+    .flash-error { animation: flash 0.2s ease-in-out; }
+    @keyframes flash { 0%, 100% { background: #020617; } 50% { background: #450a0a; border-color: var(--red); } }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .stat-card { background: #0f172a; padding: 0.75rem; border-radius: 4px; border: 1px solid var(--border); }
+    .stat-label { font-size: 0.75rem; color: var(--muted); }
+    .stat-val { font-size: 1.25rem; font-weight: bold; margin-top: 0.25rem; color: var(--cyan); }
+    .complete-banner { background: #064e3b; border: 1px solid var(--green); color: #ecfdf5; padding: 1rem; border-radius: 4px; margin-top: 1rem; text-align: center; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <span class="badge">DEVELOPER HARNESS ONLY (NOT Finished Game UI)</span>
+    <h1>Base Typing Game — Core Engine Debug Harness</h1>
+    <p class="desc">
+      Question Master v3 (全180問) のロード、Typing Engine（動的ローマ字揺れ・ASCII混在語・促音・撥音判定）、および Dynamic Timing Engine（文字数連動走行時間算出）のリアルタイム動作確認用最小開発ハーネスです。
+    </p>
+
+    <div class="controls">
+      <select id="diffFilter">
+        <option value="ALL">全難易度 (180問)</option>
+        <option value="BEGINNER">初級 (60問)</option>
+        <option value="INTERMEDIATE">中級 (60問)</option>
+        <option value="ADVANCED">上級 (60問)</option>
+      </select>
+      <select id="questionSelect" style="max-width: 300px;"></select>
+      <button id="btnRandom">ランダム出題</button>
+      <button id="btnReset">リセット</button>
+      <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--muted);">
+        <input type="checkbox" id="chkPractice"> 練習モード (1.5x)
+      </label>
+    </div>
+
+    <div class="card" id="typingCard">
+      <div id="qDifficulty" style="color: var(--amber); font-size: 0.75rem; font-weight: bold; margin-bottom: 0.25rem;"></div>
+      <div class="prompt-text" id="displayText">Loading...</div>
+      <div class="reading-text" id="readingText"></div>
+      <div class="target-box" id="targetBox">
+        <span class="typed" id="typedSpan"></span><span class="remaining" id="remainingSpan"></span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">動的走行時間 (Allowed Time)</div>
+          <div class="stat-val" id="valAllowedTime">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">実効文字数 (Keystrokes)</div>
+          <div class="stat-val" id="valKeystrokes">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">ミス数 (Mistakes)</div>
+          <div class="stat-val" id="valMistakes" style="color: var(--red);">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">入力進捗 (Progress)</div>
+          <div class="stat-val" id="valProgress">0%</div>
+        </div>
+      </div>
+
+      <div id="completeBanner" class="complete-banner" style="display: none;">
+        🎉 SUCCESS! タイピング完了 (Completed with 0 pending keys)
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { DEFAULT_QUESTIONS } from "./data/defaultQuestions.js";
+    import { TypingEngine } from "./engine/typingEngine.js";
+    import { calculateAllowedTime, getDifficultyConfig } from "./engine/timingEngine.js";
+
+    let questions = DEFAULT_QUESTIONS;
+    let currentQuestion = questions[0];
+    let engine = new TypingEngine();
+
+    const diffFilter = document.getElementById("diffFilter");
+    const questionSelect = document.getElementById("questionSelect");
+    const btnRandom = document.getElementById("btnRandom");
+    const btnReset = document.getElementById("btnReset");
+    const chkPractice = document.getElementById("chkPractice");
+    const typingCard = document.getElementById("typingCard");
+
+    const qDifficulty = document.getElementById("qDifficulty");
+    const displayText = document.getElementById("displayText");
+    const readingText = document.getElementById("readingText");
+    const typedSpan = document.getElementById("typedSpan");
+    const remainingSpan = document.getElementById("remainingSpan");
+    const valAllowedTime = document.getElementById("valAllowedTime");
+    const valKeystrokes = document.getElementById("valKeystrokes");
+    const valMistakes = document.getElementById("valMistakes");
+    const valProgress = document.getElementById("valProgress");
+    const completeBanner = document.getElementById("completeBanner");
+
+    function populateSelect() {
+      const filter = diffFilter.value;
+      const filtered = filter === "ALL" ? questions : questions.filter(q => q.difficulty === filter);
+      questionSelect.innerHTML = "";
+      filtered.forEach(q => {
+        const opt = document.createElement("option");
+        opt.value = q.id;
+        opt.textContent = `[${q.id}] ${q.displayText} (${q.difficulty})`;
+        questionSelect.appendChild(opt);
+      });
+      if (filtered.length > 0) {
+        setQuestionById(filtered[0].id);
+      }
+    }
+
+    function setQuestionById(id) {
+      currentQuestion = questions.find(q => q.id === id) || questions[0];
+      engine.setQuestion(currentQuestion);
+      updateView();
+    }
+
+    function updateView() {
+      const state = engine.getState();
+      const isPractice = chkPractice.checked;
+      const allowedTime = calculateAllowedTime(currentQuestion.difficulty, state.effectiveKeystrokes, isPractice);
+
+      qDifficulty.textContent = `[${currentQuestion.difficulty}] CATEGORY: ${currentQuestion.category}`;
+      displayText.textContent = currentQuestion.displayText;
+      readingText.textContent = `読み: ${currentQuestion.reading} | 代表例: ${currentQuestion.recommendedRomaji}`;
+      typedSpan.textContent = state.typedSoFar;
+      remainingSpan.textContent = state.remainingTarget;
+
+      valAllowedTime.textContent = `${allowedTime}s`;
+      valKeystrokes.textContent = `${state.effectiveKeystrokes} chars`;
+      valMistakes.textContent = state.mistakeCount;
+
+      const pct = state.targetLength > 0 ? Math.round((state.typedLength / state.targetLength) * 100) : 0;
+      valProgress.textContent = `${pct}%`;
+
+      if (state.isComplete) {
+        completeBanner.style.display = "block";
+      } else {
+        completeBanner.style.display = "none";
+      }
+    }
+
+    diffFilter.addEventListener("change", populateSelect);
+    questionSelect.addEventListener("change", (e) => setQuestionById(e.target.value));
+    chkPractice.addEventListener("change", updateView);
+    btnReset.addEventListener("click", () => {
+      engine.setQuestion(currentQuestion);
+      updateView();
+    });
+    btnRandom.addEventListener("click", () => {
+      const filter = diffFilter.value;
+      const filtered = filter === "ALL" ? questions : questions.filter(q => q.difficulty === filter);
+      const rand = filtered[Math.floor(Math.random() * filtered.length)];
+      questionSelect.value = rand.id;
+      setQuestionById(rand.id);
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.target.tagName === "SELECT" || e.target.tagName === "INPUT" && e.target.type !== "checkbox") {
+        return;
+      }
+      if (e.key === "Tab") return;
+
+      if (e.key === "Backspace") {
+        // Reset current question for debug ease
+        engine.setQuestion(currentQuestion);
+        updateView();
+        return;
+      }
+
+      if (e.key.length === 1) {
+        const res = engine.inputKey(e.key);
+        if (!res.accepted) {
+          typingCard.classList.remove("flash-error");
+          void typingCard.offsetWidth; // trigger reflow
+          typingCard.classList.add("flash-error");
+        }
+        updateView();
+      }
+    });
+
+    populateSelect();
+  </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "base-typing-game",
+  "version": "1.0.0",
+  "description": "2D Horizontal-scrolling Typing Game with Scaffold Material Loading Theme",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/runAllTests.js"
+  },
+  "keywords": [
+    "typing-game",
+    "pixel-art",
+    "scaffolding"
+  ],
+  "author": "mikisaa",
+  "license": "UNLICENSED",
+  "private": true
+}
