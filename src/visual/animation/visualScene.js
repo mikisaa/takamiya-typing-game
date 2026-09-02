@@ -4,11 +4,12 @@ import { getTruckSvg, getTruckTypeForDifficulty, TRUCK_METADATA } from "../pixel
 import { getScaffoldLoadSvg, getRandomScaffoldLoad } from "../pixel/scaffoldLoadsSvg.js";
 import { getSuccessSparkSvg, getCollisionBurstSvg } from "../pixel/effectsSvg.js";
 import { getCityCompositionSvg } from "../pixel/background/cityComposition.js";
+import { ExtraEventManager } from "./extraEventManager.js";
 
 /**
  * Visual Scene Coordinator
  * Manages the visual rendering layer, background city progression, vehicle sprites,
- * scaffold loads, and feedback animations.
+ * scaffold loads, EXTRA Stage visual events, and feedback animations.
  * Completely decoupled from game timers and scoring logic.
  */
 
@@ -59,6 +60,9 @@ export class GameVisualScene {
     this.currentCorrectCount = 0;
     this.lastRenderedCorrectCount = -1;
 
+    // EXTRA Stage Event Manager (Phase 5)
+    this.extraManager = new ExtraEventManager();
+
     this.initDOM();
   }
 
@@ -71,11 +75,18 @@ export class GameVisualScene {
         <!-- Background Sky Layer -->
         <div class="scene-sky-layer"></div>
 
+        <!-- Rainbow Background Overlay Layer (Phase 5) -->
+        <div id="visualRainbowLayer" class="scene-rainbow-layer"></div>
+
         <!-- Progressive City Panorama Layer (Phase 4) -->
         <div id="visualCityPanoramaLayer" class="scene-city-panorama-layer"></div>
 
         <!-- Ground Yard & Horizon Fence -->
         <div class="scene-horizon-fence"></div>
+
+        <!-- Airborne Dynamic EXTRA Events Layer (Phase 5) -->
+        <div id="visualExtraDynamicLayer" class="scene-extra-dynamic-layer"></div>
+
         <div class="scene-road-ground">
           <div class="road-lane-stripes"></div>
         </div>
@@ -94,7 +105,9 @@ export class GameVisualScene {
       </div>
     `;
 
+    this.rainbowLayer = this.container.querySelector("#visualRainbowLayer");
     this.cityPanoramaLayer = this.container.querySelector("#visualCityPanoramaLayer");
+    this.extraDynamicLayer = this.container.querySelector("#visualExtraDynamicLayer");
     this.truckLayer = this.container.querySelector("#visualTruckLayer");
     this.forkliftLayer = this.container.querySelector("#visualForkliftLayer");
     this.activeLoadLayer = this.container.querySelector("#visualActiveLoadLayer");
@@ -127,10 +140,13 @@ export class GameVisualScene {
     this.resetForNewQuestion();
     this.renderTruck();
     this.renderCityPanorama(0);
+    this.extraManager.reset();
+    if (this.rainbowLayer) this.rainbowLayer.innerHTML = "";
+    if (this.extraDynamicLayer) this.extraDynamicLayer.innerHTML = "";
   }
 
   /**
-   * Resets scene elements for the next question (preserves truckLoadStage and background)
+   * Resets scene elements for the next question (preserves truckLoadStage, background & active extra events)
    */
   resetForNewQuestion() {
     this.visualState = VISUAL_STATES.RUN;
@@ -152,8 +168,10 @@ export class GameVisualScene {
    * - Increments truck flatbed loadStage (up to max 5)
    * - Keeps load on forklift (REMAINS_ON_FORK, no arc flying)
    * - Triggers truck pop & pixel sparkle
+   * - Notifies EXTRA Event Manager if in EXTRA stage (correctCount >= 34)
+   * @param {number} correctCount
    */
-  triggerSuccess() {
+  triggerSuccess(correctCount = 0) {
     this.visualState = VISUAL_STATES.SUCCESS_LOAD;
     this.animElapsed = 0;
     this.truckLoadStage = Math.min(5, this.truckLoadStage + 1);
@@ -165,6 +183,11 @@ export class GameVisualScene {
       x: sparkX,
       y: 60
     };
+
+    // Trigger EXTRA Stage Event if applicable (count >= 34)
+    if (correctCount >= 34) {
+      this.extraManager.onExtraSuccess(correctCount);
+    }
   }
 
   /**
@@ -207,6 +230,15 @@ export class GameVisualScene {
   update(deltaSeconds, normalizedProgress = 0, gameState = "PLAYING", correctCount = 0) {
     // 0. Update background city panorama if correct count updated
     this.renderCityPanorama(correctCount);
+
+    // 0.5 Update EXTRA Stage Visual Events Manager
+    this.extraManager.update(deltaSeconds);
+    if (this.rainbowLayer) {
+      this.rainbowLayer.innerHTML = this.extraManager.renderRainbow();
+    }
+    if (this.extraDynamicLayer) {
+      this.extraDynamicLayer.innerHTML = this.extraManager.renderDynamicEvents();
+    }
 
     // 1. Synchronize progress during active PLAYING state
     if (gameState === "PLAYING" && this.visualState === VISUAL_STATES.RUN) {

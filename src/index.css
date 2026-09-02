@@ -462,6 +462,23 @@ body {
   z-index: 1;
 }
 
+/* 1.2 Rainbow Background Overlay Layer (Phase 5) */
+.scene-rainbow-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 900px;
+  height: 135px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.extra-rainbow-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 /* 1.5 Progressive City Panorama (Phase 4) */
 .scene-city-panorama-layer {
   position: absolute;
@@ -477,6 +494,22 @@ body {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+/* 1.8 Airborne Dynamic EXTRA Events Layer (Phase 5) */
+.scene-extra-dynamic-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 900px;
+  height: 135px;
+  z-index: 3;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.extra-dynamic-item {
+  pointer-events: none;
 }
 
 /* 2. Horizon & Industrial Fence Silhouette */

@@ -107,7 +107,7 @@
   * 従来の「資材飛翔方式」を完全廃止し、フォークリフト上の資材はフォーク爪上に保持（`REMAINS_ON_FORK`）。
   * トラック荷台に 5段階の積載状態（`LOAD_STAGE_0` 〜 `LOAD_STAGE_5`）を実装。SUCCESSごとに 1段階ずつ足場資材（束管、布板、枠材、固定ストラップ）が整然と積載され、満載（Stage 5）へ成長。
   * SUCCESS時にトラック全体が軽快にポップアップ（float 2-3px & scale 1.035）し、周囲にピクセル・スパークルが発光する祝祭演出を実装。
-* **Production Mode Typing Mistake Timer Penalty (`src/config/gameConfig.js`, `src/engine/gameSession.js`)**:
+* **Production Mode Typing Mistake Penalty (`src/config/gameConfig.js`, `src/engine/gameSession.js`)**:
   * 本番モード中のタイピング誤入力時に、難易度別 Global Timer ペナルティを即時減算するロジックを実装：
     * **初級**: `-0.50秒`
     * **中級**: `-0.75秒`
@@ -156,7 +156,32 @@
 * **Automated Tests (`tests/testBackgroundProgression.js`, `tests/runAllTests.js`)**:
   * 全Main Stage判定（0〜34+）、単調増加する建設進捗度、全建造物の永続描画検証、MISS時・練習モード時の独立性テストを新規追加。
   * 全自動テスト 合計 561 件 PASS（`561 / 561 PASS`）。
+
+---
+
+## 8. Implementation Phase 5: EXTRA Stage Visual Events (2026-09-03)
+
+### 8.1 実装サマリー
+* **EXTRA Visual Configuration Master (`src/config/extraVisualConfig.js`)**:
+  * イベント種別（`AIRPLANE`, `HELICOPTER`, `BALLOONS`, `SKYDIVER`, `RAINBOW`）、各持続時間、最大同時発生数（`maxConcurrentDynamicEvents: 3`）、レア発生率（`skydiverProbability: 0.12`, `rainbowProbability: 0.25`）、重み付け確率を定義。
+* **5 Dedicated Pixel Art Sprites (`src/visual/pixel/extra/`)**:
+  * `airplaneSvg.js`: 小型旅客機（48x16px、水平巡航、窓、主翼・尾翼、明滅ナビゲーションライト）。
+  * `helicopterSvg.js`: ヘリコプター（42x20px、3フレーム回転メインローター、2フレーム回転テールローター、中央ホバリング・ピッチ動作、着陸スキッド）。
+  * `balloonsSvg.js`: 風船クラスタ（28x38px、赤・青・黄・緑・橙の5個の風船、リボン結束、揺らぎ浮上）。
+  * `skydiverSvg.js`: スカイダイバー（32x36px、前半1.5秒のコミカルなフリーフォール降下 → 後半パラシュート開傘・安全降下）。
+  * `rainbowSvg.js`: 虹（900x135px、5色同心円グラデーション半透明アーチ、フェードイン/フェードアウト付き背景オーバーレイ）。
+* **Decoupled Event Lifecycle Manager (`src/visual/animation/extraEventManager.js`)**:
+  * 動的空中イベントの生成・更新・破棄サイクルを管理。
+  * 最大同時実行数（2〜4）のクランプ、同一動的イベントの重複発生防止（Duplicate Prevention）を厳格保証。
+  * スコア・制限時間・コンボロジックには一切関与しない完全な視覚的リワードレイヤーとして独立。
+  * セッション終了時・リトライ時の完全初期化（Orphan DOM / Timer Leakage 0）を担保。
+* **Visual Scene Integration & Layering (`src/visual/animation/visualScene.js`, `src/index.css`)**:
+  * `SKY` (z:1) → `RAINBOW` (z:1.2) → `CITY` (z:2) → `FENCE` (z:3) → `EXTRA DYNAMIC` (z:3.5) → `ROAD` (z:4) → `VEHICLES` (z:10〜30) の厳格なZ-indexレイヤー構成。
+  * 正解数 34問到達時（初EXTRA突入）に祝福バルーンを確定生成。
+* **Automated Tests (`tests/testExtraEvents.js`, `tests/runAllTests.js`)**:
+  * 境界テスト、5種Sprite生成、決定論的/シード付きランダム選択、同時実行数クランプ、重複防止、レアダイバー確率、虹の状態遷移、セッション初期化、MISS独立性、30連続正解急行スモークテストを追加。
+  * 全自動テスト 合計 643 件 PASS（`643 / 643 PASS`）。
 * **Browser Real-Device Verification**:
-  * 実ブラウザ（Chrome）にて、通常ゲームプレイでの段階的建設（更地→コンテナ→住宅）、およびデベロッパーフックによる各Stage（ビル、高層ビル、東京タワー、スカイツリー完成、EXTRA街並み）の実機描画・視認性・HUD整合性を確認。
+  * 実ブラウザ（Chrome）にて、EXTRA到達・虹の出現・飛行機横断・ヘリコプターローター回転＆ホバリング・風船浮上・スカイダイバー開傘降下・4種同時共存シーン・通常ゲームプレイでの正解連携・タイトル復帰時の完全クリアを確認。
 
 ---

@@ -172,7 +172,7 @@ function gameLoop(timestamp) {
 
     // Transition into SUCCESS_FEEDBACK
     if (currentState === GAME_STATES.SUCCESS_FEEDBACK && previousSessionState !== GAME_STATES.SUCCESS_FEEDBACK) {
-      visualScene.triggerSuccess();
+      visualScene.triggerSuccess(activeSession.correctCount);
     }
     // Transition into MISS_FEEDBACK
     else if (currentState === GAME_STATES.MISS_FEEDBACK && previousSessionState !== GAME_STATES.MISS_FEEDBACK) {
@@ -348,11 +348,18 @@ btnResultTitle.addEventListener("click", () => {
   showScreen("title");
 });
 
-// 9. Developer-Only Test & State Injection Hooks (Section 43)
+// 9. Developer-Only Test & State Injection Hooks (Section 43 & Phase 5)
 if (typeof window !== "undefined") {
   window.__setDevCorrectCount = (count) => {
     if (visualScene) visualScene.renderCityPanorama(count);
   };
+  window.__triggerExtraEvent = (type) => {
+    if (visualScene && visualScene.extraManager) visualScene.extraManager.spawnEvent(type);
+  };
+  window.__triggerRainbow = () => {
+    if (visualScene && visualScene.extraManager) visualScene.extraManager.triggerRainbow();
+  };
   window.__getActiveSession = () => activeSession;
   window.__getVisualScene = () => visualScene;
+  window.__getExtraManager = () => visualScene?.extraManager;
 }
