@@ -1,0 +1,129 @@
+import { BACKEND_CONFIG } from "./backendConfig.js";
+
+/**
+ * Pure Backend Validation & Security Sanitization Functions
+ */
+
+export function sanitizeSpreadsheetFormula(value) {
+  if (typeof value !== "string") {
+    return value;
+  }
+  const trimmed = value.trim();
+  if (
+    trimmed.startsWith("=") ||
+    trimmed.startsWith("+") ||
+    trimmed.startsWith("-") ||
+    trimmed.startsWith("@")
+  ) {
+    return `'${value}`;
+  }
+  return value;
+}
+
+export function validateSubmitScoreRequest(data) {
+  const { LIMITS, ERROR_CODES, ALLOWED_MODES, ALLOWED_DIFFICULTIES, ALLOWED_STAGES } = BACKEND_CONFIG;
+
+  if (!data || typeof data !== "object") {
+    return { valid: false, code: ERROR_CODES.INVALID_REQUEST, message: "Request data must be an object." };
+  }
+
+  // Required String IDs
+  if (!data.submissionId || typeof data.submissionId !== "string" || !data.submissionId.trim()) {
+    return { valid: false, code: ERROR_CODES.MISSING_PARAMETER, message: "Missing or invalid submissionId." };
+  }
+  if (!data.playerId || typeof data.playerId !== "string" || !data.playerId.trim()) {
+    return { valid: false, code: ERROR_CODES.MISSING_PARAMETER, message: "Missing or invalid playerId." };
+  }
+
+  // Mode validation
+  if (!data.mode || typeof data.mode !== "string") {
+    return { valid: false, code: ERROR_CODES.MISSING_PARAMETER, message: "Missing mode parameter." };
+  }
+  const upperMode = data.mode.trim().toUpperCase();
+  if (upperMode === "PRACTICE") {
+    return { valid: false, code: ERROR_CODES.PRACTICE_MODE_NOT_RECORDED, message: "Practice mode scores are not persisted to database." };
+  }
+  if (!ALLOWED_MODES.includes(upperMode)) {
+    return { valid: false, code: ERROR_CODES.INVALID_REQUEST, message: `Invalid game mode: ${data.mode}. Only PRODUCTION is accepted.` };
+  }
+
+  // Difficulty validation
+  if (!data.difficulty || typeof data.difficulty !== "string") {
+    return { valid: false, code: ERROR_CODES.MISSING_PARAMETER, message: "Missing difficulty parameter." };
+  }
+  const upperDiff = data.difficulty.trim().toUpperCase();
+  if (!ALLOWED_DIFFICULTIES.includes(upperDiff)) {
+    return { valid: false, code: ERROR_CODES.INVALID_DIFFICULTY, message: `Invalid difficulty: ${data.difficulty}. Allowed: ${ALLOWED_DIFFICULTIES.join(", ")}.` };
+  }
+
+  // Reached Stage validation
+  if (!data.reachedStage || typeof data.reachedStage !== "string") {
+    return { valid: false, code: ERROR_CODES.MISSING_PARAMETER, message: "Missing reachedStage parameter." };
+  }
+  const upperStage = data.reachedStage.trim().toUpperCase();
+  if (!ALLOWED_STAGES.includes(upperStage)) {
+    return { valid: false, code: ERROR_CODES.INVALID_STAGE, message: `Invalid reachedStage: ${data.reachedStage}. Allowed: ${ALLOWED_STAGES.join(", ")}.` };
+  }
+
+  // Helper for numeric boundary validation
+  function validateNumber(val, min, max, name, isInteger = true) {
+    if (typeof val !== "number" || isNaN(val) || !isFinite(val)) {
+      return { valid: false, code: ERROR_CODES.NUMERIC_OUT_OF_BOUNDS, message: `Field ${name} must be a valid finite number.` };
+    }
+    if (isInteger && !Number.isInteger(val)) {
+      return { valid: false, code: ERROR_CODES.NUMERIC_OUT_OF_BOUNDS, message: `Field ${name} must be an integer.` };
+    }
+    if (val < min || val > max) {
+      return { valid: false, code: ERROR_CODES.NUMERIC_OUT_OF_BOUNDS, message: `Field ${name} (${val}) out of allowed bounds [${min}, ${max}].` };
+    }
+    return { valid: true };
+  }
+
+  // Validate all numeric metric fields
+  const scoreCheck = validateNumber(data.score, LIMITS.MIN_SCORE, LIMITS.MAX_SCORE, "score", true);
+  if (!scoreCheck.valid) return scoreCheck;
+
+  const correctCheck = validateNumber(data.correctCount, LIMITS.MIN_CORRECT_COUNT, LIMITS.MAX_CORRECT_COUNT, "correctCount", true);
+  if (!correctCheck.valid) return correctCheck;
+
+  const charsCheck = validateNumber(data.typedCharacters, LIMITS.MIN_TYPED_CHARACTERS, LIMITS.MAX_TYPED_CHARACTERS, "typedCharacters", true);
+  if (!charsCheck.valid) return charsCheck;
+
+  const mistakesCheck = validateNumber(data.typingMistakes, LIMITS.MIN_TYPING_MISTAKES, LIMITS.MAX_TYPING_MISTAKES, "typingMistakes", true);
+  if (!mistakesCheck.valid) return mistakesCheck;
+
+  const missCheck = validateNumber(data.missCount, LIMITS.MIN_MISS_COUNT, LIMITS.MAX_MISS_COUNT, "missCount", true);
+  if (!missCheck.valid) return missCheck;
+
+  const accCheck = validateNumber(data.accuracy, LIMITS.MIN_ACCURACY, LIMITS.MAX_ACCURACY, "accuracy", false);
+  if (!accCheck.valid) return accCheck;
+
+  const comboCheck = validateNumber(data.maxCombo, LIMITS.MIN_MAX_COMBO, LIMITS.MAX_MAX_COMBO, "maxCombo", true);
+  if (!comboCheck.valid) return comboCheck;
+
+  const wpmCheck = validateNumber(data.wpm, LIMITS.MIN_WPM, LIMITS.MAX_WPM, "wpm", false);
+  if (!wpmCheck.valid) return wpmCheck;
+
+  const kpmCheck = validateNumber(data.kpm, LIMITS.MIN_KPM, LIMITS.MAX_KPM, "kpm", false);
+  if (!kpmCheck.valid) return kpmCheck;
+
+  return { valid: true, sanitized: {
+    submissionId: sanitizeSpreadsheetFormula(data.submissionId.trim()),
+    playerId: sanitizeSpreadsheetFormula(data.playerId.trim()),
+    mode: upperMode,
+    difficulty: upperDiff,
+    score: data.score,
+    correctCount: data.correctCount,
+    typedCharacters: data.typedCharacters,
+    typingMistakes: data.typingMistakes,
+    missCount: data.missCount,
+    accuracy: Number(data.accuracy.toFixed(2)),
+    maxCombo: data.maxCombo,
+    wpm: Number(data.wpm.toFixed(1)),
+    kpm: Number(data.kpm.toFixed(1)),
+    reachedStage: upperStage,
+    startedAtClient: data.startedAt ? sanitizeSpreadsheetFormula(String(data.startedAt)) : "",
+    finishedAtClient: data.finishedAt ? sanitizeSpreadsheetFormula(String(data.finishedAt)) : "",
+    appVersion: data.appVersion ? sanitizeSpreadsheetFormula(String(data.appVersion)) : "1.0.0"
+  }};
+}

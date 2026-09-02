@@ -1,4 +1,4 @@
-﻿# セキュリティ・環境変数ファイル (最重要)
+# セキュリティ・環境変数ファイル (最重要)
 .env
 .env.local
 .env.development.local
@@ -10,6 +10,8 @@
 *.key
 *.token
 credentials.json
+.clasp.json
+.clasprc.json
 
 # 依存パッケージ (Node.js)
 node_modules/

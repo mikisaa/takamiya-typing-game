@@ -221,3 +221,39 @@
 
 ---
 
+## 10. Implementation Phase 7: Google Spreadsheet & GAS Backend Foundation (2026-09-03)
+
+### 10.1 実装サマリー
+* **Backend Architecture & Trust Boundary (`docs/backend/01_architecture.md`)**:
+  * 会社環境に **Google Workspace (旧 G Suite) が存在しない** ことを正式前提として確定。
+  * `PLAYER_SELECTION_IS_NOT_AUTHENTICATION`：プレイヤー選択は認証ではなく表示名指定である信頼境界を明文化。
+  * Question Master SSOT（`data/questions/takamiya-typing-game-master-v3.csv` 180問）を100%維持し、スプレッドシートへの二重コピー・`Questions` シート作成を完全防止。
+  * ランキング判定・スコア日時のAuthoritativeタイムゾーンを `Asia/Tokyo`（JST）と規定。
+* **Spreadsheet Schema Specification (`docs/backend/02_spreadsheet_schema.md`)**:
+  * `Players` シート（6列：`PlayerID`, `PlayerName`, `Enabled`, `SortOrder`, `CreatedAt`, `UpdatedAt`）。
+  * `Scores` シート（19列：`ScoreID`, `SubmissionID`, `PlayerID`, `PlayerNameSnapshot`, `Difficulty`, `Score`, `CorrectCount`, `TypedCharacters`, `TypingMistakes`, `MissCount`, `Accuracy`, `MaxCombo`, `WPM`, `KPM`, `ReachedStage`, `StartedAtClient`, `FinishedAtClient`, `PlayedAtServer`, `AppVersion`）。
+  * `Meta` シート（3列：`Key`, `Value`, `UpdatedAt`）。
+* **Modular GAS Source (`backend/gas/`)**:
+  * `appsscript.json`: `timeZone: "Asia/Tokyo"`, `runtimeVersion: "V8"`。
+  * `Config.gs`: 定数、上限値、エラーコード、スキーマ列定義。
+  * `Response.gs`: 統一エンベロープ（`ok: true / error`）JSONレスポンスビルダー。
+  * `Spreadsheet.gs`: スプレッドシート取得（Script Properties `SPREADSHEET_ID`）、ヘッダー初期化、Formula Injectionサニタイズ。
+  * `Players.gs`: `getPlayers` リポジトリ（有効プレイヤー抽出・ソート）。
+  * `Scores.gs`: スコア永続化、二重登録防止検索（`SubmissionID` 照合）。
+  * `Validation.gs`: ペイロード型検査、難易度（`BEGINNER`〜`ADVANCED`）、ステージ（`GROUND`〜`EXTRA`）、数値範囲検証。
+  * `Code.gs`: `doGet` / `doPost` ルーター、`LockService` による排他制御と冪等処理。
+* **Shared Pure Logic & In-Memory Fake DB (`backend/shared/`)**:
+  * `backendConfig.js`, `backendValidator.js`, `fakeSpreadsheetDb.js`, `backendService.js`。
+  * 外部通信を伴わずローカルNode環境で確定的にテスト可能な設計を採用。
+* **Automated Backend Tests (`tests/testBackendFoundation.js`, `tests/runAllTests.js`)**:
+  * スキーマ定義・CSV SSOT維持・health・getPlayers・submitScore正常系・二重送信冪等性（`duplicate: true`）・練習モード拒絶（`PRACTICE_MODE_NOT_RECORDED`）・難易度検証・ステージ検証・未知/無効プレイヤー拒絶・数値境界検証・Formula Injection対策・同時実行ロックタイムアウトの全59検証項目を追加。
+  * 全自動テスト 合計 730 件 PASS（`730 / 730 PASS`）。
+* **Cloud Resource Creation & Audit**:
+  * `clasp` を通じて Google Apps Script プロジェクト（`Base Typing Game Backend`）を作成し、ソースコード8ファイルをリモートプッシュ完了。
+  * 初回Web Appデプロイのアクセス権限承認（OAuth同意）にはブラウザ経由の人間による承認操作が必要となるため、`MANUAL_GOOGLE_AUTH_REQUIRED` 境界を厳格に報告。
+* **Frontend Isolation**:
+  * フロントエンド（`src/`）コードは一切変更せず、既存の完全なゲームループ・Visual演出・ローカルプレイ可能性を100%維持。
+
+---
+
+
