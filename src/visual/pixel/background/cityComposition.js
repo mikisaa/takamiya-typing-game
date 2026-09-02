@@ -6,6 +6,7 @@ import { getHighriseSvg } from "./highriseSvg.js";
 import { getTokyoTowerSvg } from "./tokyoTowerSvg.js";
 import { getSkytreeSvg } from "./skytreeSvg.js";
 import { getConstructionDetails } from "../../../engine/backgroundProgression.js";
+import { PALETTE } from "../palette.js";
 
 /**
  * City Panorama Composition Generator
@@ -23,11 +24,11 @@ export function getCityCompositionSvg(correctCount = 0) {
   if (details.correctCount >= 7) {
     distantSilhouette = `
       <g class="distant-skyline" opacity="0.45">
-        <rect x="180" y="105" width="22" height="23" fill="#94a3b8" />
-        <rect x="250" y="100" width="18" height="28" fill="#94a3b8" />
-        <rect x="340" y="95" width="26" height="33" fill="#94a3b8" />
-        <rect x="440" y="98" width="20" height="30" fill="#94a3b8" />
-        <rect x="520" y="102" width="24" height="26" fill="#94a3b8" />
+        <rect x="180" y="105" width="22" height="23" fill="${PALETTE.PALE_2}" stroke="${PALETTE.DARK}" stroke-width="0.5" />
+        <rect x="250" y="100" width="18" height="28" fill="${PALETTE.PALE_2}" stroke="${PALETTE.DARK}" stroke-width="0.5" />
+        <rect x="340" y="95" width="26" height="33" fill="${PALETTE.PALE_2}" stroke="${PALETTE.DARK}" stroke-width="0.5" />
+        <rect x="440" y="98" width="20" height="30" fill="${PALETTE.PALE_2}" stroke="${PALETTE.DARK}" stroke-width="0.5" />
+        <rect x="520" y="102" width="24" height="26" fill="${PALETTE.PALE_2}" stroke="${PALETTE.DARK}" stroke-width="0.5" />
       </g>
     `;
   }

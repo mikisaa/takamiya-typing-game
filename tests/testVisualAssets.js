@@ -33,9 +33,9 @@ export function runVisualAssetsTests() {
     }
   }
 
-  // 1. Palette check
-  assert(PALETTE.FORK_BODY_MAIN === "#fb8500", "Palette contains FORK_BODY_MAIN");
-  assert(PALETTE.OUTLINE_DARK === "#141923", "Palette contains OUTLINE_DARK");
+  // 1. Palette check (Phase 6 Unified Palette)
+  assert(PALETTE.FORK_BODY_MAIN === "#B9D175", "Palette contains FORK_BODY_MAIN (#B9D175)");
+  assert(PALETTE.OUTLINE_DARK === "#450C3F", "Palette contains OUTLINE_DARK (#450C3F)");
 
   // 2. Forklift SVG Sprite
   const forkliftSvg = getForkliftSvg({ wheelFrame: 0, forkLiftY: 0 });

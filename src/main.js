@@ -62,7 +62,10 @@ const metricChars = document.getElementById("metricChars");
 const metricAccuracy = document.getElementById("metricAccuracy");
 const metricMaxCombo = document.getElementById("metricMaxCombo");
 const metricSpeed = document.getElementById("metricSpeed");
-const metricBgStage = document.getElementById("metricBgStage");
+const metricWpm = document.getElementById("metricWpm");
+const metricKpm = document.getElementById("metricKpm");
+const metricPlayTimeItem = document.getElementById("metricPlayTimeItem");
+const metricPlayTime = document.getElementById("metricPlayTime");
 const btnResultReplay = document.getElementById("btnResultReplay");
 const btnResultTitle = document.getElementById("btnResultTitle");
 
@@ -234,26 +237,23 @@ function renderGameUI() {
   hudScoreVal.textContent = activeSession.getCurrentScore().toLocaleString();
   hudComboVal.textContent = activeSession.currentCombo;
 
-  // Background Stage
+  // Background Stage (No OS emoji)
   const summary = activeSession.getSummary();
-  hudBgStageBadge.textContent = `🏛️ ${summary.backgroundStage.displayName}`;
+  hudBgStageBadge.textContent = summary.backgroundStage.displayName;
 
   // 3. Track Status
   trackForkliftTimer.textContent = `残り ${Math.max(0, activeSession.perQuestionTimeRemaining).toFixed(1)}s`;
 
   if (activeSession.state === GAME_STATES.SUCCESS_FEEDBACK) {
-    trackStatusMsg.textContent = "✅ 積込完了 (SUCCESS)";
-    trackStatusMsg.style.color = "var(--green)";
+    trackStatusMsg.textContent = "積込完了 (SUCCESS)";
     feedbackBanner.className = "feedback-banner success";
-    feedbackBanner.textContent = "🎉 SUCCESS!";
+    feedbackBanner.textContent = "SUCCESS!";
   } else if (activeSession.state === GAME_STATES.MISS_FEEDBACK) {
-    trackStatusMsg.textContent = "⚠️ 接触・資材落下 (MISS)";
-    trackStatusMsg.style.color = "var(--red)";
+    trackStatusMsg.textContent = "接触・資材落下 (MISS)";
     feedbackBanner.className = "feedback-banner miss";
-    feedbackBanner.textContent = "💥 MISS!";
+    feedbackBanner.textContent = "MISS!";
   } else {
     trackStatusMsg.textContent = "積込走行中...";
-    trackStatusMsg.style.color = "var(--muted)";
     feedbackBanner.className = "feedback-banner";
     feedbackBanner.textContent = "";
   }
@@ -292,11 +292,25 @@ function renderResultScreen() {
   metricCorrect.textContent = `${summary.correctCount} 問`;
   metricMiss.textContent = `${summary.missCount} 回`;
   metricMistakes.textContent = `${summary.typingMistakeCount} 回`;
+  metricChars.textContent = `${summary.totalKeystrokes || (summary.correctKeystrokes + summary.typingMistakeCount)} 文字`;
   const accVal = summary.accuracyPercent ?? (typeof summary.accuracy === "object" ? summary.accuracy.percent : summary.accuracy);
   metricAccuracy.textContent = `${Number(accVal || 100).toFixed(1)}%`;
   metricMaxCombo.textContent = `${summary.maxCombo} COMBO`;
-  metricSpeed.textContent = `${summary.kpm} KPM / ${summary.wpm} WPM`;
-  metricBgStage.textContent = summary.backgroundStage.displayName;
+  if (metricWpm) metricWpm.textContent = `${summary.wpm} WPM`;
+  if (metricKpm) metricKpm.textContent = `${summary.kpm} KPM`;
+  if (metricSpeed) metricSpeed.textContent = `${summary.kpm} KPM / ${summary.wpm} WPM`;
+  const bgStageElem = document.getElementById("metricBgStage");
+  if (bgStageElem) bgStageElem.textContent = summary.backgroundStage.displayName;
+
+  if (summary.mode === GAME_MODES.PRACTICE && metricPlayTimeItem && metricPlayTime) {
+    metricPlayTimeItem.style.display = "block";
+    const totalSecs = Math.floor(summary.elapsedTime || 0);
+    const mins = String(Math.floor(totalSecs / 60)).padStart(2, "0");
+    const secs = String(totalSecs % 60).padStart(2, "0");
+    metricPlayTime.textContent = `${mins}:${secs}`;
+  } else if (metricPlayTimeItem) {
+    metricPlayTimeItem.style.display = "none";
+  }
 }
 
 // 7. Typing Input Event Listener
