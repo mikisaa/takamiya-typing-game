@@ -140,13 +140,17 @@ export class GameVisualScene {
   }
 
   /**
-   * Triggers MISS collision animation sequence
+   * Triggers MISS collision animation sequence:
+   * - Resets truck flatbed loadStage to 0 (empty)
+   * - Shakes forklift and truck
+   * - Drops scaffold load from forklift
    */
   triggerMiss() {
     this.visualState = VISUAL_STATES.COLLISION;
     this.animElapsed = 0;
     this.isForkliftShaking = true;
     this.isTruckShaking = true;
+    this.truckLoadStage = 0; // Reset truck flatbed loadStage to 0 on MISS
 
     // Forklift position at collision
     const forkliftX = this.START_X + this.currentProgress * (this.CONTACT_X - this.START_X);

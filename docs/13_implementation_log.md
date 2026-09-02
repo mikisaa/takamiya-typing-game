@@ -107,7 +107,6 @@
   * 従来の「資材飛翔方式」を完全廃止し、フォークリフト上の資材はフォーク爪上に保持（`REMAINS_ON_FORK`）。
   * トラック荷台に 5段階の積載状態（`LOAD_STAGE_0` 〜 `LOAD_STAGE_5`）を実装。SUCCESSごとに 1段階ずつ足場資材（束管、布板、枠材、固定ストラップ）が整然と積載され、満載（Stage 5）へ成長。
   * SUCCESS時にトラック全体が軽快にポップアップ（float 2-3px & scale 1.035）し、周囲にピクセル・スパークルが発光する祝祭演出を実装。
-  * セッション中は積載状態を維持し、MISSや誤入力では減少しない安定設計。
 * **Production Mode Typing Mistake Timer Penalty (`src/config/gameConfig.js`, `src/engine/gameSession.js`)**:
   * 本番モード中のタイピング誤入力時に、難易度別 Global Timer ペナルティを即時減算するロジックを実装：
     * **初級**: `-0.50秒`
@@ -115,11 +114,26 @@
     * **上級**: `-1.00秒`
     * **練習モード**: ペナルティなし（時間無制限維持）
   * 受理対象のローマ字バリアント入力（例: `じ` に対する `zi`, `し` に対する `si`）ではペナルティが一切発生しないことを厳格保証。
-  * ペナルティによるタイマー満了時は 0秒へクランプして正常にリザルトへ遷移。
-* **Automated Tests (`tests/testTimers.js`, `tests/testComboAndScore.js`, `tests/testVisualAssets.js`, `tests/testIntegrationGameLoop.js`)**:
-  * 正答率サマリー検証、各難易度タイポペナルティ、代替バリアント非減算、タイマークランプ、トラック5段階積載SVG生成テストを追加。
+* **Automated Tests (`tests/`)**:
   * 合計 506 件の自動テスト全件 PASS（`506 / 506 PASS`）。
+
+---
+
+## 6. Implementation Phase 3.2: MISS Truck Load Reset Correction (2026-09-03)
+
+### 6.1 実装サマリー
+* **Authoritative Timeout MISS Truck Load Stage Reset (`src/engine/gameSession.js`, `src/visual/animation/visualScene.js`)**:
+  * 走行時間切れによるフォークリフト接触（`handleMissTimeout()` / `triggerMiss()`）発生時、トラック荷台の積載状態（`truckLoadStage`）を即座に `0`（`LOAD_STAGE_0`：空荷）へ完全リセットする仕様を実装。
+  * これまで積み上げた資材（Stage 1〜5）が接触衝突演出とともにクリアされ、次問正解時には Stage 1 から再スタートするゲームルールを確立。
+* **Typing Mistake & Alternate Variant Isolation**:
+  * キーのタイピング誤入力（Typing Mistake）時は、タイマー減算・コンボリセット・赤色フラッシュが発生するものの、`truckLoadStage` は維持（例: Stage 4 のまま保持）。
+  * 代替ローマ字（Alternate Romaji Variant）入力時も、不正なリセットやペナルティが発生せず正常に維持。
+* **Background Progression & Score Independence**:
+  * トラック荷台の空荷リセットは視覚的ミニプログレッションであり、背景建造物進行（更地〜ビル〜スカイツリー）や正解数（`correctCount`）、累積スコアへの干渉を排除。
+* **Automated Tests (`tests/testVisualAssets.js`)**:
+  * Stage 0〜5 各段階からの MISS リセットテスト（Case 1〜4）、誤入力時の非リセットテスト、代替ローマ字テスト、MISS後SUCCESSでの Stage 1 再開テスト、背景進行独立性テストを新規追加。
+  * 全自動テスト 合計 525 件 PASS（`525 / 525 PASS`）。
 * **Browser Real-Device Verification**:
-  * 実ブラウザ（Chrome）にて、リザルト画面正答率表示（`92.3%`）、5段階トラック積込蓄積、フォーク荷物保持、初級-0.5s / 上級-1.0s ペナルティ減算、代替ローマ字（`HINSI`）非減算を確認。
+  * 実ブラウザ（Chrome）にて、Stage 3 → MISS → Stage 0（空荷）、Stage 5 → MISS → Stage 0（空荷）、タイポ時のStage 3維持、MISS後正解時のStage 1再開を実機確認。
 
 ---

@@ -14,9 +14,12 @@ import {
 } from "../src/visual/pixel/trucksSvg.js";
 import { getSuccessSparkSvg, getCollisionBurstSvg } from "../src/visual/pixel/effectsSvg.js";
 import { VISUAL_STATES, GameVisualScene } from "../src/visual/animation/visualScene.js";
+import { GameSession } from "../src/engine/gameSession.js";
+import { GAME_MODES, DIFFICULTY_LEVELS } from "../src/engine/gameState.js";
+import { DEFAULT_QUESTIONS } from "../src/data/defaultQuestions.js";
 
 export function runVisualAssetsTests() {
-  console.log("\n=== Testing Pixel Art Visual Assets, Truck Loading Stages & Animation Layer ===");
+  console.log("\n=== Testing Pixel Art Visual Assets, Truck Loading Stages & MISS Reset ===");
   let passed = 0;
   let failed = 0;
 
@@ -96,8 +99,7 @@ export function runVisualAssetsTests() {
     assert(svg1 !== svg5, `${truckType} stage 5 has fuller load than stage 1`);
   }
 
-  // 6. Visual Scene Coordinator Loading State Progression
-  // Mock dummy container for Node environment
+  // 6. Visual Scene Coordinator Loading Progression & MISS Reset Tests
   const mockContainer = {
     innerHTML: "",
     querySelector: () => ({ style: {}, innerHTML: "" })
@@ -118,19 +120,98 @@ export function runVisualAssetsTests() {
   scene.triggerSuccess();
   assert(scene.truckLoadStage === 5, "After 6th+ SUCCESS, truckLoadStage remains clamped at 5");
 
-  // MISS does not decrement loadStage
+  // Phase 3.2: Timeout MISS resets truckLoadStage to 0
   scene.triggerMiss();
-  assert(scene.truckLoadStage === 5, "MISS collision does not decrement truckLoadStage");
+  assert(scene.truckLoadStage === 0, "MISS collision resets truckLoadStage to 0 (empty flatbed)");
+
+  // SUCCESS after MISS restarts at 1
+  scene.triggerSuccess();
+  assert(scene.truckLoadStage === 1, "SUCCESS after MISS advances truckLoadStage to 1");
 
   // Resetting for difficulty / new session resets loadStage to 0
   scene.setDifficulty("INTERMEDIATE");
   assert(scene.truckLoadStage === 0, "setDifficulty resets truckLoadStage to 0");
 
-  // 7. Effects SVG
+  // --- 7. GameSession State Integration & Reset Cases (Sections 16-21) ---
+  // Case 1: Stage 0 -> Timeout MISS -> Stage 0
+  const sess1 = new GameSession({ mode: GAME_MODES.PRODUCTION, difficulty: DIFFICULTY_LEVELS.BEGINNER, questions: DEFAULT_QUESTIONS });
+  sess1.startPlaying();
+  sess1.handleMissTimeout();
+  assert(sess1.truckLoadStage === 0, "Case 1: Stage 0 -> Timeout MISS -> Stage 0");
+
+  // Case 2: Stage 1 -> Timeout MISS -> Stage 0
+  const sess2 = new GameSession({ mode: GAME_MODES.PRODUCTION, difficulty: DIFFICULTY_LEVELS.BEGINNER, questions: DEFAULT_QUESTIONS });
+  sess2.startPlaying();
+  sess2.handleSuccess();
+  assert(sess2.truckLoadStage === 1, "Stage reached 1 after success");
+  sess2.handleMissTimeout();
+  assert(sess2.truckLoadStage === 0, "Case 2: Stage 1 -> Timeout MISS -> Stage 0");
+
+  // Case 3: Stage 3 -> Timeout MISS -> Stage 0
+  const sess3 = new GameSession({ mode: GAME_MODES.PRODUCTION, difficulty: DIFFICULTY_LEVELS.BEGINNER, questions: DEFAULT_QUESTIONS });
+  sess3.startPlaying();
+  sess3.handleSuccess();
+  sess3.handleSuccess();
+  sess3.handleSuccess();
+  assert(sess3.truckLoadStage === 3, "Stage reached 3 after 3 successes");
+  sess3.handleMissTimeout();
+  assert(sess3.truckLoadStage === 0, "Case 3: Stage 3 -> Timeout MISS -> Stage 0");
+
+  // Case 4: Stage 5 -> Timeout MISS -> Stage 0
+  const sess4 = new GameSession({ mode: GAME_MODES.PRODUCTION, difficulty: DIFFICULTY_LEVELS.BEGINNER, questions: DEFAULT_QUESTIONS });
+  sess4.startPlaying();
+  for (let i = 0; i < 6; i++) sess4.handleSuccess();
+  assert(sess4.truckLoadStage === 5, "Stage reached 5 after 6 successes");
+  sess4.handleMissTimeout();
+  assert(sess4.truckLoadStage === 0, "Case 4: Stage 5 -> Timeout MISS -> Stage 0");
+
+  // Typing Mistake Regression: Stage 4 -> Typing Mistake -> Stage 4 (no reset)
+  const sessTypo = new GameSession({ mode: GAME_MODES.PRODUCTION, difficulty: DIFFICULTY_LEVELS.BEGINNER, questions: DEFAULT_QUESTIONS });
+  sessTypo.startPlaying();
+  for (let i = 0; i < 4; i++) sessTypo.handleSuccess();
+  assert(sessTypo.truckLoadStage === 4, "Stage reached 4");
+  sessTypo.handleInput("!"); // wrong key
+  assert(sessTypo.truckLoadStage === 4, "Typing mistake does NOT reset truckLoadStage (remains Stage 4)");
+
+  // Alternate Romaji Regression: Stage 4 -> Accepted variant -> Stage 4 until success
+  const sessVar = new GameSession({
+    mode: GAME_MODES.PRODUCTION,
+    difficulty: DIFFICULTY_LEVELS.BEGINNER,
+    questions: [{ id: "TEST_ZI", difficulty: "BEGINNER", displayText: "じ", reading: "じ", canonicalTarget: "JI", effectiveKeystrokes: 2 }]
+  });
+  sessVar.startPlaying();
+  for (let i = 0; i < 4; i++) sessVar.handleSuccess();
+  assert(sessVar.truckLoadStage === 4, "Stage is 4");
+  sessVar.handleInput("z"); // accepted variant
+  assert(sessVar.truckLoadStage === 4, "Accepted variant does NOT reset truckLoadStage");
+
+  // Sequence: SUCCESS x4 -> TIMEOUT MISS -> SUCCESS
+  const sessSeq = new GameSession({ mode: GAME_MODES.PRODUCTION, difficulty: DIFFICULTY_LEVELS.BEGINNER, questions: DEFAULT_QUESTIONS });
+  sessSeq.startPlaying();
+  for (let i = 0; i < 4; i++) sessSeq.handleSuccess();
+  assert(sessSeq.truckLoadStage === 4, "Sequence: Reached Stage 4");
+  sessSeq.handleMissTimeout();
+  assert(sessSeq.truckLoadStage === 0, "Sequence: MISS reset to Stage 0");
+  sessSeq.handleSuccess();
+  assert(sessSeq.truckLoadStage === 1, "Sequence: SUCCESS after MISS reaches Stage 1");
+
+  // Background Independence: Correct count sufficient for BUILDING stage, MISS resets truck load to 0 while background remains BUILDING
+  const sessBg = new GameSession({ mode: GAME_MODES.PRODUCTION, difficulty: DIFFICULTY_LEVELS.BEGINNER, questions: DEFAULT_QUESTIONS });
+  sessBg.startPlaying();
+  for (let i = 0; i < 14; i++) sessBg.handleSuccess(); // 14 correct -> BUILDING stage
+  const summaryBefore = sessBg.getSummary();
+  assert(summaryBefore.backgroundStage.stageKey === "BUILDING", "Background stage is BUILDING");
+  sessBg.handleMissTimeout();
+  const summaryAfter = sessBg.getSummary();
+  assert(sessBg.truckLoadStage === 0, "Truck loadStage reset to 0 on MISS");
+  assert(summaryAfter.backgroundStage.stageKey === "BUILDING", "Background stage remains BUILDING after MISS");
+  assert(summaryAfter.correctCount === 14, "Correct count remains 14 after MISS");
+
+  // 8. Effects SVG
   assert(getSuccessSparkSvg().includes("<svg"), "Success spark SVG generated");
   assert(getCollisionBurstSvg().includes("<svg"), "Collision burst SVG generated");
 
-  // 8. Visual States
+  // 9. Visual States
   assert(VISUAL_STATES.IDLE === "IDLE", "Visual state IDLE exists");
   assert(VISUAL_STATES.RUN === "RUN", "Visual state RUN exists");
   assert(VISUAL_STATES.SUCCESS_LOAD === "SUCCESS_LOAD", "Visual state SUCCESS_LOAD exists");

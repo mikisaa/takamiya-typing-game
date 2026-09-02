@@ -54,6 +54,7 @@ export class GameSession {
     this.maxCombo = 0;
     this.earnedTimeBonus = 0;
     this.lastAwardedBonusCombo = 0;
+    this.truckLoadStage = 0; // 0 to 5 flatbed loading stage (resets to 0 on MISS)
 
     // Current Question & Typing Engine
     this.currentQuestion = null;
@@ -219,7 +220,10 @@ export class GameSession {
     const earnedScore = calculateQuestionScore(charCount, this.currentCombo);
     this.accumulatedQuestionScore += earnedScore;
 
-    // 2. Check combo threshold for TIME BONUS (every 15 combos in Production)
+    // 2. Advance truck flatbed loading stage (clamped to max 5)
+    this.truckLoadStage = Math.min(5, this.truckLoadStage + 1);
+
+    // 3. Check combo threshold for TIME BONUS (every 15 combos in Production)
     if (this.mode === GAME_MODES.PRODUCTION) {
       const bonusThreshold = this.config.comboThresholdForBonus || 15;
       const bonusSeconds = this.config.timeBonusPerCombo || 5;
@@ -236,7 +240,7 @@ export class GameSession {
       }
     }
 
-    // 3. Record history
+    // 4. Record history
     this.questionHistory.push({
       id: this.currentQuestion.id,
       displayText: this.currentQuestion.displayText,
@@ -246,17 +250,19 @@ export class GameSession {
       effectiveKeystrokes: charCount
     });
 
-    // 4. Set feedback state
+    // 5. Set feedback state
     this.state = GAME_STATES.SUCCESS_FEEDBACK;
     this.feedbackTimer = this.feedbackDuration;
   }
 
   /**
    * Handles Question MISS timeout flow (Forklift reached truck)
+   * Resets truck flatbed loading stage to 0 (empty)
    */
   handleMissTimeout() {
     this.missCount += 1;
     this.currentCombo = 0;
+    this.truckLoadStage = 0; // Authoritative reset on per-question timeout MISS
 
     // Apply difficulty specific penalty in Production
     if (this.mode === GAME_MODES.PRODUCTION) {
@@ -331,6 +337,7 @@ export class GameSession {
       typingMistakeCount: this.typingMistakeCount,
       typedCharacterCount: this.typedCharacterCount,
       maxCombo: this.maxCombo,
+      truckLoadStage: this.truckLoadStage,
       accuracy: {
         typed: this.typedCharacterCount,
         mistakes: this.typingMistakeCount,
