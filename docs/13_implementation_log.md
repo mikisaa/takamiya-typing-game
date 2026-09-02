@@ -71,3 +71,32 @@
   * ブラウザ実機スモークテスト（Mode Copy 表示およびバリアントタイピング入力）全項目 PASS。
 
 ---
+
+## 4. Implementation Phase 3: Pixel Art Visual Assets & Loading Animation (2026-09-02)
+
+### 4.1 実装サマリー
+* **Pixel Art Architecture & Palette (`src/visual/pixel/palette.js`)**:
+  * 24色キュレーション済みのインダストリアル・ピクセルパレットを定義。外部画像・CDN・重いテクスチャへの依存を一切持たない純粋なインラインSVGピクセルアートシステムを構築。
+* **Forklift Sprite & Animation (`src/visual/pixel/forkliftSvg.js`)**:
+  * 96x56 logical pxのカウンターバランス式フォークリフト側面図。
+  * オーバーヘッドガード、運転席、後部カウンターウェイト、垂直マスト、荷役フォーク爪、マルチフレーム回転タイヤ（3フレーム）、1pxボディボビングを実装。
+* **7 Scaffold Load Sprites (`src/visual/pixel/scaffoldLoadsSvg.js`)**:
+  * 支柱 (`POST_BUNDLE`)、手摺 (`HANDRAIL_BUNDLE`)、建枠 (`FRAME_STACK`)、布板 (`PLANK_STACK`)、筋交 (`BRACE_BUNDLE`)、ジャッキベースパレット (`JACK_BASE_PALLET`)、小物パーツパレット (`SMALL_PARTS_PALLET`) の全7種ピクセル資材を実装。
+  * 問題出題時に直前重複を避けてランダム選定し、フォークリフトの爪の上に追従。
+* **3 Difficulty Truck Sprites (`src/visual/pixel/trucksSvg.js`)**:
+  * 初級：`KEI_TRUCK`（軽トラック、2軸、ホワイトキャブ、小荷台、クレーンなし）。
+  * 中級：`CRANE_4T`（4tユニック車、キャブ直後にブルーの格納式ローダークレーン、中型荷台、リア複輪）。
+  * 上級：`CRANE_15T`（15t大型ユニック車、ハイルーフキャブ、オレンジ大型クレーンブーム、ロング荷台、タンデム3軸複輪）。
+  * 難易度ごとに明確なサイズ差・視覚特徴を付与しつつ、ゲームタイマー・到達ロジック用接触座標は統一。荷台上の `loadTarget` アンカーを定義。
+* **Visual Scene Coordinator & Animation Layer (`src/visual/animation/visualScene.js`, `src/index.css`)**:
+  * `BACKGROUND` → `WORLD ROAD` → `TRUCK` → `TRUCK_LOADS` → `FORKLIFT` → `FORKLIFT_LOAD` → `EFFECTS` の厳格なZ-indexレイヤー階層。
+  * **SUCCESS演出 (~450ms)**: フォークリフト停止 → フォーク＆資材上昇（6px） → 荷台 `loadTarget` へ放物線アーク移動 → 荷台着地＆微小バウンス → ピクセルスパークルエフェクト（荷台積載最大3個保持、古いものはフェードアウト）。
+  * **MISS演出 (~450ms)**: トラック接触 → インパクトスターバースト → フォークリフト後方シェイク（3px）＆トラックシェイク（2px） → 資材が前方へ回転しながら地面へ落下・バウンス。
+  * ゲームロジック・タイマー・スコア計算から完全分離したイベント駆動・フレーム更新。
+* **Automated Tests (`tests/testVisualAssets.js`, `tests/runAllTests.js`)**:
+  * パレット、フォークリフトSVG、全7種資材SVG、3難易度トラック、エフェクト、Visual State遷移テストを新規追加。
+  * 全自動テスト 合計 464 件 PASS（`464 / 464 PASS`）。
+* **Browser Real-Device Verification**:
+  * 初級（軽トラ）、中級（4tユニック）、上級（15t大型ユニック）すべての難易度でタイピング入力連動、走行、SUCCESS積込、MISS衝突落下アニメーションの実機動作を確認。
+
+---

@@ -153,6 +153,15 @@ export class GameSession {
   }
 
   /**
+   * Alias for handleInput
+   * @param {string} key
+   * @returns {object}
+   */
+  inputKey(key) {
+    return this.handleInput(key);
+  }
+
+  /**
    * Handles keyboard input during gameplay
    * @param {string} key
    * @returns {object} { accepted: boolean, isMistake: boolean, isComplete: boolean }

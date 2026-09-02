@@ -1,9 +1,10 @@
-import { DEFAULT_QUESTIONS } from "./data/defaultQuestions.js";
-import { GAME_STATES, GAME_MODES, DIFFICULTY_LEVELS } from "./engine/gameState.js";
 import { GameSession } from "./engine/gameSession.js";
+import { GAME_STATES, GAME_MODES } from "./engine/gameState.js";
+import { DEFAULT_QUESTIONS } from "./data/defaultQuestions.js";
 import { GAME_CONFIG } from "./config/gameConfig.js";
+import { GameVisualScene } from "./visual/animation/visualScene.js";
 
-// DOM Elements Selection
+// DOM Screens
 const screens = {
   title: document.getElementById("screenTitle"),
   setup: document.getElementById("screenSetup"),
@@ -11,17 +12,17 @@ const screens = {
   result: document.getElementById("screenResult")
 };
 
-// Title Elements
+// Title Screen Elements
 const btnStartProduction = document.getElementById("btnStartProduction");
 const btnStartPractice = document.getElementById("btnStartPractice");
 
-// Setup Elements
+// Setup Screen Elements
 const setupModeTitle = document.getElementById("setupModeTitle");
 const setupModeDesc = document.getElementById("setupModeDesc");
 const btnLaunchGame = document.getElementById("btnLaunchGame");
 const btnBackToTitle = document.getElementById("btnBackToTitle");
 
-// Game HUD Elements
+// Game Screen Elements
 const readyOverlay = document.getElementById("readyOverlay");
 const readyCountText = document.getElementById("readyCountText");
 const hudModeBadge = document.getElementById("hudModeBadge");
@@ -31,12 +32,13 @@ const hudGlobalTimer = document.getElementById("hudGlobalTimer");
 const hudScoreVal = document.getElementById("hudScoreVal");
 const hudComboVal = document.getElementById("hudComboVal");
 
-// Track Elements
+// Visual Scene Container
+const gameVisualSceneContainer = document.getElementById("gameVisualScene");
+let visualScene = null;
+
+// Track Status Elements
 const trackStatusMsg = document.getElementById("trackStatusMsg");
 const trackForkliftTimer = document.getElementById("trackForkliftTimer");
-const forkliftElement = document.getElementById("forkliftElement");
-const materialNameTag = document.getElementById("materialNameTag");
-const truckVehicleTag = document.getElementById("truckVehicleTag");
 
 // Prompt & Target Elements
 const feedbackBanner = document.getElementById("feedbackBanner");
@@ -45,12 +47,10 @@ const promptReadingText = document.getElementById("promptReadingText");
 const targetDisplayBox = document.getElementById("targetDisplayBox");
 const targetTypedSpan = document.getElementById("targetTypedSpan");
 const targetRemainingSpan = document.getElementById("targetRemainingSpan");
-
-// Game Action Buttons
 const btnAbortGame = document.getElementById("btnAbortGame");
 const btnFinishPracticeEarly = document.getElementById("btnFinishPracticeEarly");
 
-// Result Elements
+// Result Screen Elements
 const resultHeaderBadge = document.getElementById("resultHeaderBadge");
 const resultMainTitle = document.getElementById("resultMainTitle");
 const resultScoreBanner = document.getElementById("resultScoreBanner");
@@ -66,16 +66,23 @@ const metricBgStage = document.getElementById("metricBgStage");
 const btnResultReplay = document.getElementById("btnResultReplay");
 const btnResultTitle = document.getElementById("btnResultTitle");
 
-// Active Game Variables
+// Application State
 let activeSession = null;
+let selectedMode = GAME_MODES.PRODUCTION;
+let selectedDifficulty = "BEGINNER";
 let animationFrameId = null;
 let lastTimestamp = 0;
-let selectedMode = GAME_MODES.PRODUCTION;
-let selectedDifficulty = DIFFICULTY_LEVELS.BEGINNER;
+let previousSessionState = null;
+let previousQuestionId = null;
 
-// Helper: Screen Switching
+// Initialize Visual Scene
+if (gameVisualSceneContainer) {
+  visualScene = new GameVisualScene(gameVisualSceneContainer);
+}
+
+// Navigation Helper
 function showScreen(screenKey) {
-  Object.values(screens).forEach((el) => el.classList.remove("active"));
+  Object.values(screens).forEach((s) => s.classList.remove("active"));
   if (screens[screenKey]) {
     screens[screenKey].classList.add("active");
   }
@@ -121,13 +128,18 @@ function startNewGame() {
     config: GAME_CONFIG
   });
 
+  previousSessionState = null;
+  previousQuestionId = null;
+
+  // Initialize Visual Scene with selected difficulty
+  if (visualScene) {
+    visualScene.setDifficulty(selectedDifficulty);
+  }
+
   // Configure UI for selected mode
   hudModeBadge.textContent = selectedMode === GAME_MODES.PRODUCTION ? "本番" : "練習";
   hudModeBadge.className = `hud-badge ${selectedMode === GAME_MODES.PRODUCTION ? "mode-badge" : "stage-badge"}`;
   hudDiffBadge.textContent = selectedDifficulty === "BEGINNER" ? "初級" : selectedDifficulty === "INTERMEDIATE" ? "中級" : "上級";
-
-  const diffConfig = GAME_CONFIG.difficulties[selectedDifficulty.toLowerCase()];
-  truckVehicleTag.textContent = diffConfig?.vehicleName || "トラック";
 
   if (selectedMode === GAME_MODES.PRACTICE) {
     btnFinishPracticeEarly.style.display = "inline-flex";
@@ -152,6 +164,33 @@ function gameLoop(timestamp) {
 
   // Tick Session State & Timers
   activeSession.tick(deltaSeconds);
+
+  // Synchronize Visual Scene with Session State transitions
+  if (visualScene) {
+    const currentState = activeSession.state;
+    const currentQId = activeSession.currentQuestion?.id;
+
+    // Transition into SUCCESS_FEEDBACK
+    if (currentState === GAME_STATES.SUCCESS_FEEDBACK && previousSessionState !== GAME_STATES.SUCCESS_FEEDBACK) {
+      visualScene.triggerSuccess();
+    }
+    // Transition into MISS_FEEDBACK
+    else if (currentState === GAME_STATES.MISS_FEEDBACK && previousSessionState !== GAME_STATES.MISS_FEEDBACK) {
+      visualScene.triggerMiss();
+    }
+    // Transition to next Question
+    else if (currentState === GAME_STATES.PLAYING && (previousSessionState !== GAME_STATES.PLAYING || currentQId !== previousQuestionId)) {
+      if (previousSessionState === GAME_STATES.SUCCESS_FEEDBACK || previousSessionState === GAME_STATES.MISS_FEEDBACK || previousSessionState === GAME_STATES.READY) {
+        visualScene.resetForNewQuestion();
+      }
+    }
+
+    previousSessionState = currentState;
+    previousQuestionId = currentQId;
+
+    // Update Visual Scene frame
+    visualScene.update(deltaSeconds, activeSession.getForkliftProgress(), activeSession.state);
+  }
 
   // Render UI
   renderGameUI();
@@ -199,12 +238,7 @@ function renderGameUI() {
   const summary = activeSession.getSummary();
   hudBgStageBadge.textContent = `🏛️ ${summary.backgroundStage.displayName}`;
 
-  // 3. Track Visual (Forklift position)
-  const progress = activeSession.getForkliftProgress();
-  // Move forklift from 2% to 76% along the road
-  const roadLeftPercent = 2 + progress * 74;
-  forkliftElement.style.left = `${roadLeftPercent}%`;
-
+  // 3. Track Status
   trackForkliftTimer.textContent = `残り ${Math.max(0, activeSession.perQuestionTimeRemaining).toFixed(1)}s`;
 
   if (activeSession.state === GAME_STATES.SUCCESS_FEEDBACK) {
@@ -229,7 +263,6 @@ function renderGameUI() {
   if (currentQ) {
     promptDisplayText.textContent = currentQ.displayText;
     promptReadingText.textContent = currentQ.reading;
-    materialNameTag.textContent = currentQ.category || "足場材";
   }
 
   const typingState = activeSession.currentTypingEngine?.getState();
@@ -260,51 +293,48 @@ function renderResultScreen() {
   metricMiss.textContent = `${summary.missCount} 回`;
   metricMistakes.textContent = `${summary.typingMistakeCount} 回`;
   metricChars.textContent = `${summary.typedCharacterCount} 文字`;
-  metricAccuracy.textContent = `${summary.accuracy}%`;
+  metricAccuracy.textContent = `${summary.accuracy.percent}%`;
   metricMaxCombo.textContent = `${summary.maxCombo} COMBO`;
   metricSpeed.textContent = `${summary.kpm} KPM / ${summary.wpm} WPM`;
   metricBgStage.textContent = summary.backgroundStage.displayName;
 }
 
-// 7. Keyboard Input Handling
+// 7. Typing Input Event Listener
 window.addEventListener("keydown", (e) => {
-  // If not currently in active PLAYING state, ignore keyboard
-  if (!activeSession || activeSession.state !== GAME_STATES.PLAYING) {
+  if (!activeSession || activeSession.state !== GAME_STATES.PLAYING) return;
+
+  // Ignore control keys, alt, cmd, tab, function keys, etc.
+  if (e.ctrlKey || e.altKey || e.metaKey || e.key.length !== 1) {
     return;
   }
 
-  // Allow browser shortcut keys (F5, F12, Ctrl/Cmd/Alt combos)
-  if (e.ctrlKey || e.metaKey || e.altKey || e.key.startsWith("F") && e.key.length > 1) {
-    return;
+  e.preventDefault();
+  const inputResult = activeSession.handleInput(e.key);
+
+  if (!inputResult.accepted) {
+    // Flash target box red on typing mistake
+    targetDisplayBox.classList.remove("flash-error");
+    void targetDisplayBox.offsetWidth; // Trigger reflow
+    targetDisplayBox.classList.add("flash-error");
   }
 
-  // Single character printable keys
-  if (e.key.length === 1) {
-    e.preventDefault();
-    const res = activeSession.handleInput(e.key);
-
-    if (res.isMistake) {
-      targetDisplayBox.classList.remove("flash-error");
-      void targetDisplayBox.offsetWidth; // trigger reflow
-      targetDisplayBox.classList.add("flash-error");
-    }
-
-    renderGameUI();
-  }
+  renderGameUI();
 });
 
-// 8. In-Game Abort & Practice Finish Actions
+// 8. In-Game & Result Action Listeners
 btnAbortGame.addEventListener("click", () => {
-  if (animationFrameId) {
-    cancelAnimationFrame(animationFrameId);
-    animationFrameId = null;
+  if (confirm("ゲームを中断してタイトル画面に戻りますか？")) {
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+    activeSession = null;
+    showScreen("title");
   }
-  activeSession = null;
-  showScreen("title");
 });
 
 btnFinishPracticeEarly.addEventListener("click", () => {
-  if (activeSession) {
+  if (activeSession && activeSession.mode === GAME_MODES.PRACTICE) {
     activeSession.finishSession();
   }
 });
@@ -317,6 +347,3 @@ btnResultTitle.addEventListener("click", () => {
   activeSession = null;
   showScreen("title");
 });
-
-// Initial View: Title Screen
-showScreen("title");

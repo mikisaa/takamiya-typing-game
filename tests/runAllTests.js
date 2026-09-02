@@ -9,6 +9,7 @@ import { runComboAndScoreTests } from "./testComboAndScore.js";
 import { runQuestionSelectorTests } from "./testQuestionSelector.js";
 import { runBackgroundProgressionTests } from "./testBackgroundProgression.js";
 import { runIntegrationGameLoopTest } from "./testIntegrationGameLoop.js";
+import { runVisualAssetsTests } from "./testVisualAssets.js";
 
 console.log("==================================================");
 console.log("BASE TYPING GAME — FULL AUTOMATED TEST SUITES");
@@ -28,6 +29,7 @@ const suites = [
   { name: "Combo & Scoring Formula", fn: runComboAndScoreTests },
   { name: "Question Selector & Pool", fn: runQuestionSelectorTests },
   { name: "Background Progression & EXTRA", fn: runBackgroundProgressionTests },
+  { name: "Pixel Art Visual Layer & Sprites", fn: runVisualAssetsTests },
   { name: "Full E2E Integration Loop", fn: runIntegrationGameLoopTest }
 ];
 
