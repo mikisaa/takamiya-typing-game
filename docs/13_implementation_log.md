@@ -124,16 +124,39 @@
 ### 6.1 実装サマリー
 * **Authoritative Timeout MISS Truck Load Stage Reset (`src/engine/gameSession.js`, `src/visual/animation/visualScene.js`)**:
   * 走行時間切れによるフォークリフト接触（`handleMissTimeout()` / `triggerMiss()`）発生時、トラック荷台の積載状態（`truckLoadStage`）を即座に `0`（`LOAD_STAGE_0`：空荷）へ完全リセットする仕様を実装。
-  * これまで積み上げた資材（Stage 1〜5）が接触衝突演出とともにクリアされ、次問正解時には Stage 1 から再スタートするゲームルールを確立。
 * **Typing Mistake & Alternate Variant Isolation**:
   * キーのタイピング誤入力（Typing Mistake）時は、タイマー減算・コンボリセット・赤色フラッシュが発生するものの、`truckLoadStage` は維持（例: Stage 4 のまま保持）。
-  * 代替ローマ字（Alternate Romaji Variant）入力時も、不正なリセットやペナルティが発生せず正常に維持。
-* **Background Progression & Score Independence**:
-  * トラック荷台の空荷リセットは視覚的ミニプログレッションであり、背景建造物進行（更地〜ビル〜スカイツリー）や正解数（`correctCount`）、累積スコアへの干渉を排除。
 * **Automated Tests (`tests/testVisualAssets.js`)**:
-  * Stage 0〜5 各段階からの MISS リセットテスト（Case 1〜4）、誤入力時の非リセットテスト、代替ローマ字テスト、MISS後SUCCESSでの Stage 1 再開テスト、背景進行独立性テストを新規追加。
   * 全自動テスト 合計 525 件 PASS（`525 / 525 PASS`）。
+
+---
+
+## 7. Implementation Phase 4: Progressive Pixel Background Construction & Landmark Completion (2026-09-03)
+
+### 7.1 実装サマリー
+* **Progressive Construction Architecture (`src/visual/pixel/background/`)**:
+  * 更地からスカイツリーまで、正解数（`correctCount`）の増加に応じて1問ごとに建設・成長するインラインSVGピクセルアートシステムを実装。
+    * `groundSvg.js`: 更地（測量杭、カラーフラッグ、木製パレット、地割線）
+    * `containerSvg.js`: コンテナヤード施設（基礎スラブ、鉄骨骨組み、波板外壁、完成オフィス施設）
+    * `houseSvg.js`: 住宅（コンクリート基礎、1階軸組、2階梁組、外壁・瓦屋根、完成住宅）
+    * `buildingSvg.js`: 中層ビル（2階躯体、3〜5階垂直延伸、カーテンウォール、窓ガラス格子、屋上設備・エントランス完成）
+    * `highriseSvg.js`: 高層ビル（深礎杭、低層躯体、中層・高層延伸、クラウン構造、ブルースカイガラス、航空障害灯完成）
+    * `tokyoTowerSvg.js`: 東京タワー（4脚アンカー脚、下部アーチトラス、赤白帯トラス、大展望台、上部細身シャフト、特別展望台、アンテナ尖塔完成）
+    * `skytreeSvg.js`: スカイツリー（深礎杭・三角錐トリポッド基礎、円柱トラスシャフト、第1展望台天望デッキ、第2展望台天望回廊、アンテナゲイン塔完成）
+    * `cityComposition.js`: 街並み全体のパノラマ合成レイヤー（遠景スカイライン、完成建造物の完全維持・共存）
+* **Completed Building Persistence (街の発展の累積維持)**:
+  * 次のStageへ進んでも前Stageの建造物は消失せず背景に永続。最終Stageではコンテナ・家・ビル・高層ビル・東京タワー・スカイツリーが共存する大パノラマを形成。
+* **Critical EXTRA Boundary Audit & Alignment (`src/engine/backgroundProgression.js`)**:
+  * 正解数 33問: `SKYTREE`（スカイツリー完成状態、`isExtra: false`、表示: `スカイツリー (完成)`）
+  * 正解数 34問以上: `EXTRA`（`isExtra: true`、表示: `スカイツリー (EXTRA)`、完成街並みを維持）
+  * スカイツリー完成状態を明確に1状態独立させ、EXTRAをSkytree完成後の追加正解から開始する仕様を厳格確立。
+* **Decoupled 60fps Rendering Performance (`src/visual/animation/visualScene.js`, `src/index.css`)**:
+  * 背景パノラマは `correctCount` が変動した時のみ再生成するキャッシュ機構を実装し、フォークリフト走行の60fpsレンダリングを阻害しない最適化を実施。
+  * MISS衝突や誤入力時にも背景建造物進行はリセットされず安定維持。
+* **Automated Tests (`tests/testBackgroundProgression.js`, `tests/runAllTests.js`)**:
+  * 全Main Stage判定（0〜34+）、単調増加する建設進捗度、全建造物の永続描画検証、MISS時・練習モード時の独立性テストを新規追加。
+  * 全自動テスト 合計 561 件 PASS（`561 / 561 PASS`）。
 * **Browser Real-Device Verification**:
-  * 実ブラウザ（Chrome）にて、Stage 3 → MISS → Stage 0（空荷）、Stage 5 → MISS → Stage 0（空荷）、タイポ時のStage 3維持、MISS後正解時のStage 1再開を実機確認。
+  * 実ブラウザ（Chrome）にて、通常ゲームプレイでの段階的建設（更地→コンテナ→住宅）、およびデベロッパーフックによる各Stage（ビル、高層ビル、東京タワー、スカイツリー完成、EXTRA街並み）の実機描画・視認性・HUD整合性を確認。
 
 ---

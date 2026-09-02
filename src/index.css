@@ -462,13 +462,30 @@ body {
   z-index: 1;
 }
 
+/* 1.5 Progressive City Panorama (Phase 4) */
+.scene-city-panorama-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 900px;
+  height: 135px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.city-panorama-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 /* 2. Horizon & Industrial Fence Silhouette */
 .scene-horizon-fence {
   position: absolute;
-  top: 110px;
+  top: 116px;
   left: 0;
   right: 0;
-  height: 15px;
+  height: 10px;
   background: repeating-linear-gradient(
     90deg,
     #202c45 0px,
@@ -477,7 +494,7 @@ body {
     transparent 12px
   );
   border-bottom: 2px solid #283756;
-  z-index: 2;
+  z-index: 3;
 }
 
 /* 3. Asphalt Yard Road & Ground */

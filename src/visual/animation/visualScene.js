@@ -3,10 +3,12 @@ import { getForkliftSvg } from "../pixel/forkliftSvg.js";
 import { getTruckSvg, getTruckTypeForDifficulty, TRUCK_METADATA } from "../pixel/trucksSvg.js";
 import { getScaffoldLoadSvg, getRandomScaffoldLoad } from "../pixel/scaffoldLoadsSvg.js";
 import { getSuccessSparkSvg, getCollisionBurstSvg } from "../pixel/effectsSvg.js";
+import { getCityCompositionSvg } from "../pixel/background/cityComposition.js";
 
 /**
  * Visual Scene Coordinator
- * Manages the visual rendering layer, vehicle sprites, scaffold loads, and animations.
+ * Manages the visual rendering layer, background city progression, vehicle sprites,
+ * scaffold loads, and feedback animations.
  * Completely decoupled from game timers and scoring logic.
  */
 
@@ -53,6 +55,10 @@ export class GameVisualScene {
     // Falling load state during MISS
     this.fallingLoad = null; // { type, x, y, rotation }
 
+    // Background progressive city tracking
+    this.currentCorrectCount = 0;
+    this.lastRenderedCorrectCount = -1;
+
     this.initDOM();
   }
 
@@ -62,8 +68,13 @@ export class GameVisualScene {
   initDOM() {
     this.container.innerHTML = `
       <div class="visual-scene-viewport">
-        <!-- Background Sky & Ground Yard -->
+        <!-- Background Sky Layer -->
         <div class="scene-sky-layer"></div>
+
+        <!-- Progressive City Panorama Layer (Phase 4) -->
+        <div id="visualCityPanoramaLayer" class="scene-city-panorama-layer"></div>
+
+        <!-- Ground Yard & Horizon Fence -->
         <div class="scene-horizon-fence"></div>
         <div class="scene-road-ground">
           <div class="road-lane-stripes"></div>
@@ -83,10 +94,26 @@ export class GameVisualScene {
       </div>
     `;
 
+    this.cityPanoramaLayer = this.container.querySelector("#visualCityPanoramaLayer");
     this.truckLayer = this.container.querySelector("#visualTruckLayer");
     this.forkliftLayer = this.container.querySelector("#visualForkliftLayer");
     this.activeLoadLayer = this.container.querySelector("#visualActiveLoadLayer");
     this.effectsLayer = this.container.querySelector("#visualEffectsLayer");
+
+    this.renderCityPanorama(0);
+  }
+
+  /**
+   * Renders the progressive city panorama SVG when correctCount updates
+   * @param {number} correctCount
+   */
+  renderCityPanorama(correctCount = 0) {
+    if (!this.cityPanoramaLayer) return;
+    if (correctCount === this.lastRenderedCorrectCount) return;
+
+    this.cityPanoramaLayer.innerHTML = getCityCompositionSvg(correctCount);
+    this.lastRenderedCorrectCount = correctCount;
+    this.currentCorrectCount = correctCount;
   }
 
   /**
@@ -99,10 +126,11 @@ export class GameVisualScene {
     this.truckLoadStage = 0;
     this.resetForNewQuestion();
     this.renderTruck();
+    this.renderCityPanorama(0);
   }
 
   /**
-   * Resets scene elements for the next question (preserves truckLoadStage)
+   * Resets scene elements for the next question (preserves truckLoadStage and background)
    */
   resetForNewQuestion() {
     this.visualState = VISUAL_STATES.RUN;
@@ -174,8 +202,12 @@ export class GameVisualScene {
    * @param {number} deltaSeconds
    * @param {number} normalizedProgress - Forklift travel progress (0.0 to 1.0)
    * @param {string} gameState - Current GameSession state
+   * @param {number} correctCount - Current session correct count for background
    */
-  update(deltaSeconds, normalizedProgress = 0, gameState = "PLAYING") {
+  update(deltaSeconds, normalizedProgress = 0, gameState = "PLAYING", correctCount = 0) {
+    // 0. Update background city panorama if correct count updated
+    this.renderCityPanorama(correctCount);
+
     // 1. Synchronize progress during active PLAYING state
     if (gameState === "PLAYING" && this.visualState === VISUAL_STATES.RUN) {
       this.currentProgress = Math.min(1.0, Math.max(0, normalizedProgress));

@@ -188,8 +188,8 @@ function gameLoop(timestamp) {
     previousSessionState = currentState;
     previousQuestionId = currentQId;
 
-    // Update Visual Scene frame
-    visualScene.update(deltaSeconds, activeSession.getForkliftProgress(), activeSession.state);
+    // Update Visual Scene frame with active session correctCount for progressive background
+    visualScene.update(deltaSeconds, activeSession.getForkliftProgress(), activeSession.state, activeSession.correctCount);
   }
 
   // Render UI
@@ -347,3 +347,12 @@ btnResultTitle.addEventListener("click", () => {
   activeSession = null;
   showScreen("title");
 });
+
+// 9. Developer-Only Test & State Injection Hooks (Section 43)
+if (typeof window !== "undefined") {
+  window.__setDevCorrectCount = (count) => {
+    if (visualScene) visualScene.renderCityPanorama(count);
+  };
+  window.__getActiveSession = () => activeSession;
+  window.__getVisualScene = () => visualScene;
+}
