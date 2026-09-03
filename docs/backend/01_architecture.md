@@ -66,3 +66,15 @@ Base Typing Game のバックエンドは、**Google Spreadsheet** をデータ�
    * クライアントが1ゲームごとに生成する一意の `SubmissionID` を利用し、ネットワークリトライや連打による多重POSTが発生しても、同一 `SubmissionID` のレコードは1件しかINSERTされません。2回目以降は既存の `ScoreID` を含む冪等な成功レスポンス（`duplicate: true`）を返します。
 3. **LockService による同時実行制御**:
    * スコア挿入処理は `LockService.getScriptLock()` により排他制御を行い、同時リクエストによるレースコンディションやロストアップデートを防止します。
+
+---
+
+## 6. Deployment Security Classification & Trust Model
+
+* **`ANONYMOUS_WEB_APP_ENDPOINT`**:
+  * 組織内に Google Workspace ドメインが存在しないため、Web App のアクセス権限は「誰でも (Anyone)」として公開デプロイされています。
+  * このエンドポイントは Google がホストするパブリック到達可能な URL であり、社内 LAN / Tailnet 専用ではありません。
+* **`WEB_APP_URL_IS_NOT_A_SECRET`**:
+  * Web App URL 自体を秘密情報（Secret）として扱わず、クライアント側に難読化や隠蔽でセキュリティを持たせることはしません。
+  * サーバーサイドでの厳格な入力値バリデーション、異常値・負値拒否、プレイヤーマスター存在照合、および `SubmissionID` 冪等性によって安全性を担保します。
+

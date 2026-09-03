@@ -88,7 +88,9 @@ Google Apps Script Web App が提供する HTTP API のインターフェース�
 本番モード（`PRODUCTION`）終了時のスコアを検証・永続化します。
 
 * **Method**: `POST`
-* **Headers**: `Content-Type: application/json`
+* **Transport Contract (Browser Cross-Origin Safe)**:
+  * **Headers**: `Content-Type: text/plain;charset=utf-8` (推奨)
+  * **Note**: Google Apps Script Web App はブラウザの CORS preflight (`OPTIONS` リクエスト) に対応していません。そのため、ブラウザからの通信時は `Content-Type: text/plain;charset=utf-8` を指定して Simple Request として送信します。GAS 側の `doPost(e)` は `e.postData.contents` から生 JSON をパースするため、同一のセマンティクスで 302 リダイレクトを経由し、ブラウザ側でレスポンス JSON を直接読み取ることができます。
 * **Request Body**:
   ```json
   {

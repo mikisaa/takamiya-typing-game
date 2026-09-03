@@ -138,3 +138,33 @@ function handleSubmitScoreOperation(data) {
     }
   }
 }
+
+/**
+ * Admin Setup Function — Can be executed directly in Apps Script Editor to trigger OAuth
+ * authorization and initialize the spreadsheet schema + test player.
+ */
+function adminInitDatabase() {
+  var ss = getDatabaseSpreadsheet();
+  ensureSchemaInitialized(ss);
+
+  // Delete default empty sheet if custom sheets exist
+  var defaultSheet = ss.getSheetByName("シート1") || ss.getSheetByName("Sheet1");
+  if (defaultSheet && ss.getSheets().length > 1) {
+    try {
+      ss.deleteSheet(defaultSheet);
+    } catch (e) {
+      Logger.log("Notice: default sheet could not be deleted: " + e.message);
+    }
+  }
+
+  // Seed test player if Players sheet only has header row
+  var playersSheet = ss.getSheetByName(CONFIG.SHEET_NAMES.PLAYERS);
+  if (playersSheet && playersSheet.getLastRow() <= 1) {
+    var now = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "yyyy-MM-dd'T'HH:mm:ssXXX");
+    playersSheet.appendRow(["TEST001", "TEST PLAYER", true, 9999, now, now]);
+  }
+
+  Logger.log("Database initialized successfully for Spreadsheet ID: " + ss.getId());
+  return "OK";
+}
+

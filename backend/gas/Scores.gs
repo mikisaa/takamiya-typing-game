@@ -9,6 +9,9 @@ function findScoreBySubmissionId(submissionId, ss) {
     return null;
   }
 
+  // Force spreadsheet to sync any pending buffer writes
+  SpreadsheetApp.flush();
+
   var lastRow = sheet.getLastRow();
   if (lastRow <= 1) {
     return null;
@@ -69,4 +72,6 @@ function appendScoreRow(scoreData, ss) {
   ];
 
   sheet.appendRow(row);
+  // Synchronously flush write to Google Sheets to ensure immediate read consistency across concurrent workers
+  SpreadsheetApp.flush();
 }

@@ -256,4 +256,45 @@
 
 ---
 
+## 11. Implementation Phase 7.1: GAS Cloud Activation & Real Integration Acceptance (2026-09-04)
+
+### 11.1 実装サマリー
+* **Google Spreadsheet Resource Confirmation & Initialization**:
+  * スプレッドシート `Base Typing Game DB` を実作成・初期化（ID: `1-HUuzXK27t2eRJEwgSMVO1bNVkVRwVTyzb4LftW5TX8`）。
+  * `Players`（6列）、`Scores`（19列）、`Meta`（3列）の3シートのみを作成し、ヘッダーを1行固定で凍結。
+  * `Questions` シートは作成せず、CSV（180問）のQuestion SSOTを厳格に維持。
+  * `Meta` シートに `SchemaVersion` / `AppVersion` (`1.0.0`) をシード投入。
+  * `Players` シートに初期テストプレイヤー `TEST001` (`TEST PLAYER`, `TRUE`, `9999`) をシード投入。
+* **GAS Script Properties & OAuth Authorization**:
+  * `Base Typing Game Backend` プロジェクトの Script Properties へ `SPREADSHEET_ID` を設定完了（コード内ハードコードゼロを徹底）。
+  * エディタから `adminInitDatabase()` を実行し、`miki@takamiya.co` アカウントによる OAuth 権限承認（SpreadsheetApp, ScriptProperties, LockService）を完了。
+  * マルチスレッド環境での即時一貫性を担保するため、`appendScoreRow` および `findScoreBySubmissionId` に `SpreadsheetApp.flush()` を追加実装。
+* **Real Web App Deployment**:
+  * 種類: `ウェブアプリ (Web App)`
+  * 実行ユーザー: `自分 (miki@takamiya.co)`
+  * アクセスできるユーザー: `全員 (Anyone)`
+  * 正式 Web App URL: `https://script.google.com/macros/s/AKfycbzdPNsWV5kNdtpsF91jkca3lkJSLdVxG_2Ux8V5a5f1kMWLJmogiUG8mzbSiRk3S3xeeQ/exec`
+* **Real Live HTTP Acceptance Tests (`scripts/testRealGasBackend.js`)**:
+  * デプロイ済み実 Web App エンドポイントに対して 40 件の実 HTTP リクエストテストを実施し、全件 PASS：
+    * `health`: 正常稼働、`Asia/Tokyo` タイムスタンプ取得。
+    * `getPlayers`: `TEST001` 取得、内部メタデータ非漏洩確認。
+    * `submitScore`: 正常系本番スコア永続化、サーバー生成 `ScoreID`、スナップショット名取得。
+    * `Duplicate (Idempotency)`: 同一 `SubmissionID` 再送時に二重行追加なし・初回 `ScoreID` 冪等返却。
+    * `Invalid Rejections`: 未知プレイヤー、練習モード（`PRACTICE_MODE_NOT_RECORDED`）、不正難易度、負値スコア、超過正答率、不正ステージの全拒絶を確認。
+    * `Formula Injection`: `=cmd` 等の関数型文字列がシングルクォートで安全にエスケープされ、スプレッドシート上で関数実行されないことを実証。
+    * `Concurrency & Same-ID Race`: 3件同時並行リクエスト正常処理、同一ID 3並行リクエストで正確に1件のみ新規作成＋2件冪等重複返却を確認。
+* **Browser Cross-Origin Compatibility Acceptance (`http://localhost:8080`)**:
+  * 実ブラウザ（Chrome）上の `http://localhost:8080/index.html` から GAS Web App へ直接 `fetch` を実行：
+    * `GET ?op=health`: 200 OK、JSON 正常可読。
+    * `GET ?op=getPlayers`: 200 OK、JSON 正常可読。
+    * `POST submitScore`: `Content-Type: text/plain;charset=utf-8` を指定した Simple Request 方式により、CORS preflight (`OPTIONS`) エラーを回避し、302 リダイレクトを経由して 200 OK・JSON 正常受領を確認。
+* **Test Data Cleanup**:
+  * スプレッドシート `Scores` シートに投入された 17 行のインテグレーションテストデータを安全に削除し、1 行目ヘッダーのみのクリーンな本番受付待機状態へ初期化。
+  * `TEST001` はマスターに保持。
+* **Automated Unit Tests**:
+  * 全 730 件の自動テスト全件 PASS（`730 / 730 PASS`）。
+
+---
+
+
 
