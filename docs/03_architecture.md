@@ -73,31 +73,52 @@ graph TD
 }
 ```
 
-#### B. スコア登録 (`POST ?action=submitScore`)
+#### B. スコア登録 (`POST`)
 * **Request**: `POST https://script.google.com/macros/s/{DEPLOY_ID}/exec`
+* **Transport**: `Content-Type: text/plain;charset=utf-8` (GAS Web App CORS preflight 回避用 Simple Request)
 * **Payload**:
 ```json
 {
-  "action": "submitScore",
-  "playerId": "PL-001",
-  "playerName": "足場 太郎",
-  "difficulty": "intermediate",
-  "score": 12500,
-  "correctCount": 15,
-  "typedCharacters": 120,
-  "missCount": 3,
-  "accuracy": 97.56,
-  "maxCombo": 18,
-  "playDuration": 90,
-  "appVersion": "1.0.0"
+  "op": "submitScore",
+  "data": {
+    "submissionId": "SUB-1788470000000-8472",
+    "playerName": "山田 太郎",
+    "mode": "PRODUCTION",
+    "difficulty": "INTERMEDIATE",
+    "score": 18450,
+    "correctCount": 22,
+    "typedCharacters": 185,
+    "typingMistakes": 3,
+    "missCount": 1,
+    "accuracy": 98.38,
+    "maxCombo": 16,
+    "wpm": 38.5,
+    "kpm": 192.5,
+    "reachedStage": "HIGHRISE",
+    "startedAt": "2026-09-04T07:00:00.000Z",
+    "finishedAt": "2026-09-04T07:01:30.000Z",
+    "appVersion": "1.0.0"
+  }
 }
 ```
 * **Response**:
 ```json
 {
-  "success": true,
-  "scoreId": "SC-20260902-110001",
-  "rankMonthly": 2,
+  "ok": true,
+  "data": {
+    "scoreId": "SC-1788470000123-9182",
+    "duplicate": false,
+    "playerName": "山田 太郎",
+    "score": 18450,
+    "difficulty": "INTERMEDIATE",
+    "playedAt": "2026-09-04T16:01:30+09:00",
+    "player": {
+      "playerId": "PL-1788470000000-4821",
+      "playerName": "山田 太郎"
+    }
+  }
+}
+```
   "rankAllTime": 5,
   "message": "スコアを正常に登録しました。"
 }

@@ -20,6 +20,30 @@ export function sanitizeSpreadsheetFormula(value) {
   return value;
 }
 
+export function normalizePlayerName(rawName) {
+  if (typeof rawName !== "string") {
+    return "";
+  }
+  // 1. Unicode NFKC normalization
+  const nfkc = rawName.normalize("NFKC");
+  // 2. Trim leading/trailing whitespace
+  const trimmed = nfkc.trim();
+  // 3. Collapse multiple whitespace and full-width space (\u3000) to single ASCII space
+  const collapsed = trimmed.replace(/[\s\u3000]+/g, " ");
+  // 4. Case-insensitive normalization for ASCII alphabet
+  return collapsed.toLowerCase();
+}
+
+export function sanitizeDisplayName(rawName) {
+  if (typeof rawName !== "string") {
+    return "";
+  }
+  // NFKC, trim, collapse whitespace, but preserve case
+  const nfkc = rawName.normalize("NFKC");
+  const trimmed = nfkc.trim();
+  return trimmed.replace(/[\s\u3000]+/g, " ");
+}
+
 export function validateSubmitScoreRequest(data) {
   const { LIMITS, ERROR_CODES, ALLOWED_MODES, ALLOWED_DIFFICULTIES, ALLOWED_STAGES } = BACKEND_CONFIG;
 
@@ -27,12 +51,34 @@ export function validateSubmitScoreRequest(data) {
     return { valid: false, code: ERROR_CODES.INVALID_REQUEST, message: "Request data must be an object." };
   }
 
-  // Required String IDs
+  // Required SubmissionID
   if (!data.submissionId || typeof data.submissionId !== "string" || !data.submissionId.trim()) {
     return { valid: false, code: ERROR_CODES.MISSING_PARAMETER, message: "Missing or invalid submissionId." };
   }
-  if (!data.playerId || typeof data.playerId !== "string" || !data.playerId.trim()) {
-    return { valid: false, code: ERROR_CODES.MISSING_PARAMETER, message: "Missing or invalid playerId." };
+
+  // Required PlayerName (replaces client-supplied playerId)
+  if (data.playerName === undefined || data.playerName === null) {
+    return { valid: false, code: ERROR_CODES.MISSING_PARAMETER, message: "Missing playerName parameter." };
+  }
+  if (typeof data.playerName !== "string") {
+    return { valid: false, code: ERROR_CODES.INVALID_PLAYER_NAME, message: "Field playerName must be a string." };
+  }
+
+  const normalizedKey = normalizePlayerName(data.playerName);
+  const displayName = sanitizeDisplayName(data.playerName);
+
+  if (!normalizedKey || !displayName) {
+    return { valid: false, code: ERROR_CODES.INVALID_PLAYER_NAME, message: "Player name cannot be empty or whitespace only." };
+  }
+
+  // Character length check (Unicode surrogate pair safe)
+  const charLength = Array.from(displayName).length;
+  if (charLength > LIMITS.MAX_PLAYER_NAME_LENGTH) {
+    return {
+      valid: false,
+      code: ERROR_CODES.INVALID_PLAYER_NAME,
+      message: `Player name exceeds maximum length of ${LIMITS.MAX_PLAYER_NAME_LENGTH} characters (got ${charLength}).`
+    };
   }
 
   // Mode validation
@@ -109,7 +155,9 @@ export function validateSubmitScoreRequest(data) {
 
   return { valid: true, sanitized: {
     submissionId: sanitizeSpreadsheetFormula(data.submissionId.trim()),
-    playerId: sanitizeSpreadsheetFormula(data.playerId.trim()),
+    playerName: sanitizeSpreadsheetFormula(displayName),
+    playerNameKey: normalizedKey,
+    rawPlayerName: displayName,
     mode: upperMode,
     difficulty: upperDiff,
     score: data.score,

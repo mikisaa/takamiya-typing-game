@@ -65,8 +65,11 @@
   - ランキング期間は「今月」および「歴代」の2種類のみとし、難易度（初級・中級・上級）ごとに分離集計する。
   - 同一プレイヤーによる上位独占を防ぐため、期間×難易度ごとに各プレイヤーの自己最高スコアのみをランキング表示する。
 
-- [FR-013] プレイヤー選択 & 軽量認証方式
-  - Google Workspace組織認証を使用せず、Google Spreadsheet上のPlayer master（PlayerID, PlayerName, Enabled）から名前を選択する軽量方式を採用する。
+- [FR-013] 自由入力プレイヤー名 & ブラウザ記憶・クロスブラウザ解決方式
+  - Google Workspace組織認証を使用せず、本番モード開始時にプレイヤー名を自由入力（Text Input）する方式を採用する。
+  - 同一ブラウザでは前回入力した名前を `localStorage`（キー: `baseTypingGame.lastPlayerName.v1`）に記憶し、次回セットアップ時に自動プレフィル（共有PC利用を考慮し、自動開始は行わず常時編集可能）。
+  - 別ブラウザや別PCからでも同じ名前（サーバー側正規化 `PlayerNameKey` による判定）を入力した場合は同一PlayerIDへ紐付け、初回入力時はバックエンドでPlayerレコードを自動生成する。
+  - プレイヤー名は本人認証ではなく（`PLAYER_NAME_IS_NOT_AUTHENTICATION`）、同姓同名の別人は意図的仕様として同一Playerとして扱う（`SAME_NORMALIZED_NAME_MEANS_SAME_PLAYER`）。練習モードでは名前入力を行わない。
 
 - [FR-014] 単語・問題データ駆動管理 & Question Master v3 SSOT
   - 正式な問題データとして `data/questions/takamiya-typing-game-master-v3.csv`（全180問：初級60/中級60/上級60）を取り込み、Content SSOT として管理する。

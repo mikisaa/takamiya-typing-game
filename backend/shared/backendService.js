@@ -59,31 +59,7 @@ export class BackendService {
 
     const { sanitized } = valResult;
 
-    // 2. Validate Player in Players Master
-    const player = this.db.findPlayerById(sanitized.playerId);
-    if (!player) {
-      return {
-        ok: false,
-        error: {
-          code: ERROR_CODES.PLAYER_NOT_FOUND,
-          message: `Player with ID '${sanitized.playerId}' not found in master.`
-        }
-      };
-    }
-
-    // 3. Validate Player is Enabled
-    const isEnabled = player.Enabled === true || player.Enabled === "TRUE" || player.Enabled === 1;
-    if (!isEnabled) {
-      return {
-        ok: false,
-        error: {
-          code: ERROR_CODES.PLAYER_DISABLED,
-          message: `Player '${player.PlayerName}' (${sanitized.playerId}) is disabled.`
-        }
-      };
-    }
-
-    // 4. Early Idempotent Duplicate Check
+    // 2. Early Idempotent Duplicate Check
     const existingBeforeLock = this.db.findScoreBySubmissionId(sanitized.submissionId);
     if (existingBeforeLock) {
       return {
@@ -97,7 +73,7 @@ export class BackendService {
       };
     }
 
-    // 5. Concurrency Locking
+    // 3. Concurrency Locking
     const lockAcquired = this.db.acquireLock(LIMITS.LOCK_TIMEOUT_MS);
     if (!lockAcquired) {
       return {
@@ -110,7 +86,7 @@ export class BackendService {
     }
 
     try {
-      // 6. Idempotent Re-Check Under Lock
+      // 4. Idempotent Re-Check Under Lock
       const existingInLock = this.db.findScoreBySubmissionId(sanitized.submissionId);
       if (existingInLock) {
         return {
@@ -124,16 +100,35 @@ export class BackendService {
         };
       }
 
-      // 7. Generate Server-Authoritative ScoreID & Timestamp
+      // 5. Player Resolution & Auto-Creation Under Lock
+      let player = this.db.findPlayerByNameKey(sanitized.playerNameKey);
+      if (player) {
+        // Validate if enabled
+        const isEnabled = player.Enabled === true || player.Enabled === "TRUE" || player.Enabled === 1;
+        if (!isEnabled) {
+          return {
+            ok: false,
+            error: {
+              code: ERROR_CODES.PLAYER_DISABLED,
+              message: `Player '${player.PlayerName}' is disabled.`
+            }
+          };
+        }
+      } else {
+        // Auto-create new player
+        player = this.db.createPlayer(sanitized.rawPlayerName, sanitized.playerNameKey);
+      }
+
+      // 6. Generate Server-Authoritative ScoreID & Timestamp
       const scoreId = `SC-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
       const playedAtServer = new Date().toISOString();
 
-      // 8. Construct authoritative row
+      // 7. Construct authoritative row
       const scoreRecord = {
         ScoreID: scoreId,
         SubmissionID: sanitized.submissionId,
-        PlayerID: sanitized.playerId,
-        PlayerNameSnapshot: player.PlayerName, // Server-resolved snapshot
+        PlayerID: player.PlayerID,
+        PlayerNameSnapshot: player.PlayerName, // Server-resolved canonical snapshot
         Difficulty: sanitized.difficulty,
         Score: sanitized.score,
         CorrectCount: sanitized.correctCount,
@@ -151,10 +146,10 @@ export class BackendService {
         AppVersion: sanitized.appVersion
       };
 
-      // 9. Append Row
+      // 8. Append Row
       this.db.appendScore(scoreRecord);
 
-      // 10. Success response
+      // 9. Success response
       return {
         ok: true,
         data: {
@@ -163,11 +158,15 @@ export class BackendService {
           playerName: player.PlayerName,
           score: sanitized.score,
           difficulty: sanitized.difficulty,
-          playedAt: playedAtServer
+          playedAt: playedAtServer,
+          player: {
+            playerId: player.PlayerID,
+            playerName: player.PlayerName
+          }
         }
       };
     } finally {
-      // 11. Always release lock
+      // 10. Always release lock
       this.db.releaseLock();
     }
   }

@@ -2,6 +2,29 @@
  * Base Typing Game Backend — Request Validation
  */
 
+function normalizePlayerName(rawName) {
+  if (typeof rawName !== "string") {
+    return "";
+  }
+  // 1. Unicode NFKC normalization (Google Apps Script V8 runtime supports String.prototype.normalize)
+  var nfkc = rawName.normalize("NFKC");
+  // 2. Trim leading/trailing whitespace
+  var trimmed = nfkc.trim();
+  // 3. Collapse multiple whitespace and full-width space (\u3000) to single ASCII space
+  var collapsed = trimmed.replace(/[\s\u3000]+/g, " ");
+  // 4. Case-insensitive normalization for ASCII alphabet
+  return collapsed.toLowerCase();
+}
+
+function sanitizeDisplayName(rawName) {
+  if (typeof rawName !== "string") {
+    return "";
+  }
+  var nfkc = rawName.normalize("NFKC");
+  var trimmed = nfkc.trim();
+  return trimmed.replace(/[\s\u3000]+/g, " ");
+}
+
 function validateScoreSubmissionPayload(data) {
   var limits = CONFIG.LIMITS;
   var codes = CONFIG.ERROR_CODES;
@@ -10,12 +33,34 @@ function validateScoreSubmissionPayload(data) {
     return { valid: false, code: codes.INVALID_REQUEST, message: "Request data must be an object." };
   }
 
-  // String IDs
+  // SubmissionID
   if (!data.submissionId || typeof data.submissionId !== "string" || !data.submissionId.trim()) {
     return { valid: false, code: codes.MISSING_PARAMETER, message: "Missing or invalid submissionId." };
   }
-  if (!data.playerId || typeof data.playerId !== "string" || !data.playerId.trim()) {
-    return { valid: false, code: codes.MISSING_PARAMETER, message: "Missing or invalid playerId." };
+
+  // PlayerName (replaces client-supplied playerId)
+  if (data.playerName === undefined || data.playerName === null) {
+    return { valid: false, code: codes.MISSING_PARAMETER, message: "Missing playerName parameter." };
+  }
+  if (typeof data.playerName !== "string") {
+    return { valid: false, code: codes.INVALID_PLAYER_NAME, message: "Field playerName must be a string." };
+  }
+
+  var normalizedKey = normalizePlayerName(data.playerName);
+  var displayName = sanitizeDisplayName(data.playerName);
+
+  if (!normalizedKey || !displayName) {
+    return { valid: false, code: codes.INVALID_PLAYER_NAME, message: "Player name cannot be empty or whitespace only." };
+  }
+
+  // Character length check (Unicode surrogate pair safe using Array.from)
+  var charLength = Array.from(displayName).length;
+  if (charLength > limits.MAX_PLAYER_NAME_LENGTH) {
+    return {
+      valid: false,
+      code: codes.INVALID_PLAYER_NAME,
+      message: "Player name exceeds maximum length of " + limits.MAX_PLAYER_NAME_LENGTH + " characters (got " + charLength + ")."
+    };
   }
 
   // Mode
@@ -83,7 +128,9 @@ function validateScoreSubmissionPayload(data) {
     valid: true,
     sanitized: {
       submissionId: data.submissionId.trim(),
-      playerId: data.playerId.trim(),
+      playerName: sanitizeFormulaValue(displayName),
+      playerNameKey: normalizedKey,
+      rawPlayerName: displayName,
       mode: upperMode,
       difficulty: upperDiff,
       score: data.score,

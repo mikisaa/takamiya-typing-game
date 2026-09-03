@@ -873,6 +873,122 @@ body {
 }
 
 /* ==========================================================================
+   Phase 8: Player Name Input & Cloud Score Persistence
+   ========================================================================== */
+.setup-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.setup-label {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.05em;
+}
+
+.player-name-input {
+  background: var(--white);
+  border: 2px solid var(--dark);
+  border-radius: 6px;
+  color: var(--dark);
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 800;
+  padding: 0.65rem 1rem;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+  box-shadow: 2px 2px 0px var(--dark);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.player-name-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background-color: var(--pale-1);
+}
+
+.player-name-input::placeholder {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: normal;
+}
+
+.player-name-feedback {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--dark);
+  margin-top: 0.4rem;
+  min-height: 1.2rem;
+}
+
+.hud-player-badge {
+  display: flex;
+  flex-direction: column;
+  background: var(--pale-1);
+  border: 1px solid var(--dark);
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+  margin-left: 0.5rem;
+  text-align: left;
+}
+
+.hud-player-label {
+  font-size: 0.55rem;
+  font-weight: 900;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.hud-player-name {
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: var(--dark);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-save-container {
+  background: var(--pale-1);
+  border: 2px solid var(--dark);
+  border-radius: 6px;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 2px 2px 0px var(--dark);
+  width: 100%;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.result-save-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.result-save-status {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--dark);
+  font-family: var(--font-mono);
+}
+
+.retry-submit-btn {
+  padding: 0.35rem 0.85rem;
+  font-size: 0.85rem;
+}
+
+/* ==========================================================================
    Reduced Motion Preferences
    ========================================================================== */
 @media (prefers-reduced-motion: reduce) {

@@ -13,6 +13,7 @@ import { runVisualAssetsTests } from "./testVisualAssets.js";
 import { runExtraEventsTests } from "./testExtraEvents.js";
 import { runPaletteComplianceTests } from "./testPaletteCompliance.js";
 import { runBackendFoundationTests } from "./testBackendFoundation.js";
+import { runPhase8PlayerAndFrontendTests } from "./testPhase8PlayerAndFrontend.js";
 
 console.log("==================================================");
 console.log("BASE TYPING GAME — FULL AUTOMATED TEST SUITES");
@@ -36,6 +37,7 @@ const suites = [
   { name: "EXTRA Stage Visual Events", fn: runExtraEventsTests },
   { name: "5-Color Palette & UI Compliance", fn: runPaletteComplianceTests },
   { name: "Backend Architecture & GAS Foundation", fn: runBackendFoundationTests },
+  { name: "Phase 8 Player Name & Frontend", fn: runPhase8PlayerAndFrontendTests },
   { name: "Full E2E Integration Loop", fn: runIntegrationGameLoopTest }
 ];
 

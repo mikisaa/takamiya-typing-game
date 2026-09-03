@@ -44,6 +44,12 @@
         <h2 id="setupModeTitle" class="section-title">難易度を選択してください</h2>
         <p id="setupModeDesc" class="section-desc">難易度に応じて積込車両とフォークリフトの走行速度が変化します。</p>
 
+        <div id="playerNameGroup" class="setup-group">
+          <label for="inputPlayerName" class="setup-label">プレイヤー名</label>
+          <input type="text" id="inputPlayerName" class="player-name-input" maxlength="30" placeholder="お名前を入力してください" autocomplete="off" spellcheck="false" />
+          <div id="playerNameFeedback" class="player-name-feedback"></div>
+        </div>
+
         <div class="difficulty-grid">
           <label class="diff-card" for="diffBeginner">
             <input type="radio" name="difficultySelect" id="diffBeginner" value="BEGINNER" checked>
@@ -99,6 +105,10 @@
           <span id="hudModeBadge" class="hud-badge mode-badge">本番</span>
           <span id="hudDiffBadge" class="hud-badge diff-badge">初級</span>
           <span id="hudBgStageBadge" class="hud-badge stage-badge">更地</span>
+          <div id="hudPlayerBadge" class="hud-player-badge" style="display: none;">
+            <span class="hud-player-label">PLAYER</span>
+            <span id="hudPlayerName" class="hud-player-name">-</span>
+          </div>
         </div>
 
         <div class="hud-center">
@@ -200,6 +210,11 @@
           <div id="metricPlayTimeItem" class="metric-item" style="grid-column: span 2; display: none;">
             <span class="metric-label">プレイ時間</span>
             <span id="metricPlayTime" class="metric-val">00:00</span>
+          </div>
+        <div id="resultSaveContainer" class="result-save-container" style="display: none;">
+          <div class="result-save-status-row">
+            <span id="resultSaveStatus" class="result-save-status">スコア保存中...</span>
+            <button id="btnRetrySubmit" class="btn btn-secondary btn-small retry-submit-btn" style="display: none;">再送信</button>
           </div>
         </div>
 

@@ -63,16 +63,7 @@ function handleSubmitScoreOperation(data) {
   var sanitized = valResult.sanitized;
   var ss = getDatabaseSpreadsheet();
 
-  // 2. Validate Player in Master
-  var playerRecord = findPlayerRecord(sanitized.playerId, ss);
-  if (!playerRecord) {
-    return createErrorResponse(CONFIG.ERROR_CODES.PLAYER_NOT_FOUND, "Player with ID '" + sanitized.playerId + "' not found in master.");
-  }
-  if (!playerRecord.enabled) {
-    return createErrorResponse(CONFIG.ERROR_CODES.PLAYER_DISABLED, "Player '" + playerRecord.playerName + "' is disabled.");
-  }
-
-  // 3. Early Idempotent Duplicate Check
+  // 2. Early Idempotent Duplicate Check
   var existingBeforeLock = findScoreBySubmissionId(sanitized.submissionId, ss);
   if (existingBeforeLock) {
     return createSuccessResponse({
@@ -83,7 +74,7 @@ function handleSubmitScoreOperation(data) {
     });
   }
 
-  // 4. Lock Acquisition
+  // 3. Lock Acquisition
   var lock = LockService.getScriptLock();
   var lockAcquired = false;
   try {
@@ -97,7 +88,7 @@ function handleSubmitScoreOperation(data) {
   }
 
   try {
-    // 5. Duplicate Re-Check Under Lock
+    // 4. Duplicate Re-Check Under Lock
     var existingInLock = findScoreBySubmissionId(sanitized.submissionId, ss);
     if (existingInLock) {
       return createSuccessResponse({
@@ -108,16 +99,27 @@ function handleSubmitScoreOperation(data) {
       });
     }
 
+    // 5. Player Resolution & Auto-Creation Under Lock
+    var playerRecord = findPlayerByNameKey(sanitized.playerNameKey, ss);
+    if (playerRecord) {
+      if (!playerRecord.enabled) {
+        return createErrorResponse(CONFIG.ERROR_CODES.PLAYER_DISABLED, "Player '" + playerRecord.playerName + "' is disabled.");
+      }
+    } else {
+      playerRecord = createPlayerRecord(sanitized.rawPlayerName, sanitized.playerNameKey, ss);
+    }
+
     // 6. Generate Server ScoreID & Tokyo Timestamp
     var now = new Date();
     var scoreId = "SC-" + now.getTime() + "-" + Math.floor(1000 + Math.random() * 9000);
     var playedAtServer = Utilities.formatDate(now, CONFIG.TIMEZONE, "yyyy-MM-dd'T'HH:mm:ssXXX");
 
     sanitized.scoreId = scoreId;
+    sanitized.playerId = playerRecord.playerId;
     sanitized.playerNameSnapshot = playerRecord.playerName;
     sanitized.playedAtServer = playedAtServer;
 
-    // 7. Append Row
+    // 7. Append Row (flushes immediately to Sheets)
     appendScoreRow(sanitized, ss);
 
     // 8. Success Response
@@ -127,7 +129,11 @@ function handleSubmitScoreOperation(data) {
       playerName: playerRecord.playerName,
       score: sanitized.score,
       difficulty: sanitized.difficulty,
-      playedAt: playedAtServer
+      playedAt: playedAtServer,
+      player: {
+        playerId: playerRecord.playerId,
+        playerName: playerRecord.playerName
+      }
     });
   } finally {
     // 9. Always Release Lock
@@ -141,11 +147,12 @@ function handleSubmitScoreOperation(data) {
 
 /**
  * Admin Setup Function — Can be executed directly in Apps Script Editor to trigger OAuth
- * authorization and initialize the spreadsheet schema + test player.
+ * authorization, migrate schema, and initialize the spreadsheet schema + test player.
  */
 function adminInitDatabase() {
   var ss = getDatabaseSpreadsheet();
   ensureSchemaInitialized(ss);
+  migratePlayersSchemaIfNeeded(ss);
 
   // Delete default empty sheet if custom sheets exist
   var defaultSheet = ss.getSheetByName("シート1") || ss.getSheetByName("Sheet1");
@@ -161,7 +168,7 @@ function adminInitDatabase() {
   var playersSheet = ss.getSheetByName(CONFIG.SHEET_NAMES.PLAYERS);
   if (playersSheet && playersSheet.getLastRow() <= 1) {
     var now = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "yyyy-MM-dd'T'HH:mm:ssXXX");
-    playersSheet.appendRow(["TEST001", "TEST PLAYER", true, 9999, now, now]);
+    playersSheet.appendRow(["TEST001", "TEST PLAYER", "test player", true, 9999, now, now]);
   }
 
   Logger.log("Database initialized successfully for Spreadsheet ID: " + ss.getId());

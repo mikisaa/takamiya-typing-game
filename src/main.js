@@ -3,6 +3,8 @@ import { GAME_STATES, GAME_MODES } from "./engine/gameState.js";
 import { DEFAULT_QUESTIONS } from "./data/defaultQuestions.js";
 import { GAME_CONFIG } from "./config/gameConfig.js";
 import { GameVisualScene } from "./visual/animation/visualScene.js";
+import { getLastPlayerName, setLastPlayerName } from "./storage/playerStorage.js";
+import { BackendClient } from "./api/backendClient.js";
 
 // DOM Screens
 const screens = {
@@ -19,6 +21,9 @@ const btnStartPractice = document.getElementById("btnStartPractice");
 // Setup Screen Elements
 const setupModeTitle = document.getElementById("setupModeTitle");
 const setupModeDesc = document.getElementById("setupModeDesc");
+const playerNameGroup = document.getElementById("playerNameGroup");
+const inputPlayerName = document.getElementById("inputPlayerName");
+const playerNameFeedback = document.getElementById("playerNameFeedback");
 const btnLaunchGame = document.getElementById("btnLaunchGame");
 const btnBackToTitle = document.getElementById("btnBackToTitle");
 
@@ -28,6 +33,8 @@ const readyCountText = document.getElementById("readyCountText");
 const hudModeBadge = document.getElementById("hudModeBadge");
 const hudDiffBadge = document.getElementById("hudDiffBadge");
 const hudBgStageBadge = document.getElementById("hudBgStageBadge");
+const hudPlayerBadge = document.getElementById("hudPlayerBadge");
+const hudPlayerName = document.getElementById("hudPlayerName");
 const hudGlobalTimer = document.getElementById("hudGlobalTimer");
 const hudScoreVal = document.getElementById("hudScoreVal");
 const hudComboVal = document.getElementById("hudComboVal");
@@ -66,10 +73,15 @@ const metricWpm = document.getElementById("metricWpm");
 const metricKpm = document.getElementById("metricKpm");
 const metricPlayTimeItem = document.getElementById("metricPlayTimeItem");
 const metricPlayTime = document.getElementById("metricPlayTime");
+const resultSaveContainer = document.getElementById("resultSaveContainer");
+const resultSaveStatus = document.getElementById("resultSaveStatus");
+const btnRetrySubmit = document.getElementById("btnRetrySubmit");
 const btnResultReplay = document.getElementById("btnResultReplay");
 const btnResultTitle = document.getElementById("btnResultTitle");
 
 // Application State
+const backendClient = new BackendClient();
+let lastSubmittedPayload = null;
 let activeSession = null;
 let selectedMode = GAME_MODES.PRODUCTION;
 let selectedDifficulty = "BEGINNER";
@@ -96,6 +108,18 @@ btnStartProduction.addEventListener("click", () => {
   selectedMode = GAME_MODES.PRODUCTION;
   setupModeTitle.textContent = "【本番モード】難易度を選択してください";
   setupModeDesc.textContent = "時間制限90秒";
+  if (playerNameGroup) {
+    playerNameGroup.style.display = "flex";
+  }
+  if (playerNameFeedback) {
+    playerNameFeedback.textContent = "";
+  }
+  if (inputPlayerName) {
+    const remembered = getLastPlayerName();
+    if (remembered) {
+      inputPlayerName.value = remembered;
+    }
+  }
   showScreen("setup");
 });
 
@@ -103,6 +127,12 @@ btnStartPractice.addEventListener("click", () => {
   selectedMode = GAME_MODES.PRACTICE;
   setupModeTitle.textContent = "【練習モード】難易度を選択してください";
   setupModeDesc.textContent = "時間無制限";
+  if (playerNameGroup) {
+    playerNameGroup.style.display = "none";
+  }
+  if (playerNameFeedback) {
+    playerNameFeedback.textContent = "";
+  }
   showScreen("setup");
 });
 
@@ -114,11 +144,38 @@ btnBackToTitle.addEventListener("click", () => {
 btnLaunchGame.addEventListener("click", () => {
   const checkedDiff = document.querySelector('input[name="difficultySelect"]:checked')?.value || "BEGINNER";
   selectedDifficulty = checkedDiff;
-  startNewGame();
+
+  let validatedPlayerName = "";
+  if (selectedMode === GAME_MODES.PRODUCTION) {
+    const rawName = inputPlayerName?.value || "";
+    const cleanName = rawName.trim();
+    if (!cleanName) {
+      if (playerNameFeedback) {
+        playerNameFeedback.textContent = "プレイヤー名を入力してください。";
+      }
+      inputPlayerName?.focus();
+      return;
+    }
+    const charLen = Array.from(cleanName).length;
+    if (charLen > 30) {
+      if (playerNameFeedback) {
+        playerNameFeedback.textContent = "プレイヤー名は30文字以内で入力してください。";
+      }
+      inputPlayerName?.focus();
+      return;
+    }
+    if (playerNameFeedback) {
+      playerNameFeedback.textContent = "";
+    }
+    setLastPlayerName(cleanName);
+    validatedPlayerName = cleanName;
+  }
+
+  startNewGame(validatedPlayerName);
 });
 
 // 3. Start New Game
-function startNewGame() {
+function startNewGame(playerName = "") {
   if (animationFrameId) {
     cancelAnimationFrame(animationFrameId);
     animationFrameId = null;
@@ -128,7 +185,8 @@ function startNewGame() {
     mode: selectedMode,
     difficulty: selectedDifficulty,
     questions: DEFAULT_QUESTIONS,
-    config: GAME_CONFIG
+    config: GAME_CONFIG,
+    playerName: playerName
   });
 
   previousSessionState = null;
@@ -147,9 +205,14 @@ function startNewGame() {
   if (selectedMode === GAME_MODES.PRACTICE) {
     btnFinishPracticeEarly.style.display = "inline-flex";
     hudGlobalTimer.textContent = "PRACTICE";
+    if (hudPlayerBadge) hudPlayerBadge.style.display = "none";
   } else {
     btnFinishPracticeEarly.style.display = "none";
     hudGlobalTimer.textContent = activeSession.globalTimeRemaining.toFixed(1);
+    if (hudPlayerBadge) {
+      hudPlayerBadge.style.display = "flex";
+      if (hudPlayerName) hudPlayerName.textContent = activeSession.playerName || "-";
+    }
   }
 
   showScreen("game");
@@ -282,11 +345,18 @@ function renderResultScreen() {
     resultHeaderBadge.textContent = "PRACTICE COMPLETED";
     resultMainTitle.textContent = "練習セッション終了";
     resultScoreBanner.style.display = "none";
+    if (resultSaveContainer) resultSaveContainer.style.display = "none";
   } else {
     resultHeaderBadge.textContent = "GAME FINISHED";
     resultMainTitle.textContent = "本番リザルト";
     resultScoreBanner.style.display = "flex";
     resultFinalScore.textContent = summary.score.toLocaleString();
+    if (resultSaveContainer) {
+      resultSaveContainer.style.display = "block";
+      resultSaveStatus.textContent = "スコア保存中...";
+      if (btnRetrySubmit) btnRetrySubmit.style.display = "none";
+      submitProductionScore(summary);
+    }
   }
 
   metricCorrect.textContent = `${summary.correctCount} 問`;
@@ -310,6 +380,54 @@ function renderResultScreen() {
     metricPlayTime.textContent = `${mins}:${secs}`;
   } else if (metricPlayTimeItem) {
     metricPlayTimeItem.style.display = "none";
+  }
+}
+
+async function submitProductionScore(summary) {
+  lastSubmittedPayload = {
+    submissionId: summary.submissionId,
+    playerName: summary.playerName,
+    mode: "PRODUCTION",
+    difficulty: summary.difficulty,
+    score: summary.score,
+    correctCount: summary.correctCount,
+    typedCharacters: summary.typedCharacterCount,
+    typingMistakes: summary.typingMistakeCount,
+    missCount: summary.missCount,
+    accuracy: Number((summary.accuracyPercent ?? 100).toFixed(2)),
+    maxCombo: summary.maxCombo,
+    wpm: Number((summary.wpm || 0).toFixed(1)),
+    kpm: Number((summary.kpm || 0).toFixed(1)),
+    reachedStage: summary.backgroundStage?.id || "GROUND",
+    startedAt: summary.startedAt ? summary.startedAt.toISOString() : new Date().toISOString(),
+    finishedAt: summary.finishedAt ? summary.finishedAt.toISOString() : new Date().toISOString(),
+    appVersion: "1.0.0"
+  };
+
+  try {
+    const res = await backendClient.submitScore(lastSubmittedPayload);
+    if (res && res.ok) {
+      if (resultSaveStatus) {
+        resultSaveStatus.textContent = "スコア保存完了";
+      }
+      if (btnRetrySubmit) {
+        btnRetrySubmit.style.display = "none";
+      }
+    } else {
+      if (resultSaveStatus) {
+        resultSaveStatus.textContent = "スコア保存に失敗しました";
+      }
+      if (btnRetrySubmit) {
+        btnRetrySubmit.style.display = "inline-flex";
+      }
+    }
+  } catch (err) {
+    if (resultSaveStatus) {
+      resultSaveStatus.textContent = "スコア保存に失敗しました";
+    }
+    if (btnRetrySubmit) {
+      btnRetrySubmit.style.display = "inline-flex";
+    }
   }
 }
 
@@ -353,8 +471,29 @@ btnFinishPracticeEarly.addEventListener("click", () => {
   }
 });
 
+if (btnRetrySubmit) {
+  btnRetrySubmit.addEventListener("click", () => {
+    if (!lastSubmittedPayload) return;
+    if (resultSaveStatus) resultSaveStatus.textContent = "再送信中...";
+    btnRetrySubmit.style.display = "none";
+    backendClient.submitScore(lastSubmittedPayload).then((res) => {
+      if (res && res.ok) {
+        if (resultSaveStatus) resultSaveStatus.textContent = "スコア保存完了";
+        btnRetrySubmit.style.display = "none";
+      } else {
+        if (resultSaveStatus) resultSaveStatus.textContent = "スコア保存に失敗しました";
+        btnRetrySubmit.style.display = "inline-flex";
+      }
+    }).catch(() => {
+      if (resultSaveStatus) resultSaveStatus.textContent = "スコア保存に失敗しました";
+      btnRetrySubmit.style.display = "inline-flex";
+    });
+  });
+}
+
 btnResultReplay.addEventListener("click", () => {
-  startNewGame();
+  const rememberedName = activeSession?.playerName || getLastPlayerName();
+  startNewGame(rememberedName);
 });
 
 btnResultTitle.addEventListener("click", () => {

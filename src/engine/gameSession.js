@@ -23,10 +23,14 @@ export class GameSession {
    * @param {Array<object>} options.questions - Complete dataset of questions
    * @param {object} [options.config=GAME_CONFIG] - Game configuration master
    */
-  constructor({ mode = GAME_MODES.PRODUCTION, difficulty = DIFFICULTY_LEVELS.BEGINNER, questions = [], config = GAME_CONFIG }) {
+  constructor({ mode = GAME_MODES.PRODUCTION, difficulty = DIFFICULTY_LEVELS.BEGINNER, questions = [], config = GAME_CONFIG, playerName = "" }) {
     this.mode = mode.toUpperCase() === GAME_MODES.PRACTICE ? GAME_MODES.PRACTICE : GAME_MODES.PRODUCTION;
     this.difficulty = difficulty.toUpperCase();
     this.config = config || GAME_CONFIG;
+    this.playerName = typeof playerName === "string" ? playerName.trim() : "";
+    this.submissionId = this.mode === GAME_MODES.PRODUCTION
+      ? `SUB-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`
+      : null;
 
     this.state = GAME_STATES.SETUP;
     this.questionSelector = new QuestionSelector(questions, this.difficulty);
@@ -329,6 +333,8 @@ export class GameSession {
     const bgInfo = getBackgroundStage(this.correctCount, this.config);
 
     return {
+      submissionId: this.submissionId,
+      playerName: this.playerName,
       mode: this.mode,
       difficulty: this.difficulty,
       score: finalScore,

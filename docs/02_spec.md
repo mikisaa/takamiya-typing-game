@@ -32,7 +32,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **タイトル画面** | `btnStartGame` | DIRECT | [FR-006] | ゲーム設定・プレイヤー選択画面へ進むボタン |
 | | `btnViewRanking` | DIRECT | [FR-012] | ランキング画面へ直接遷移するボタン |
-| **設定・選択画面** | `selectPlayer` | DIRECT | [FR-013] | スプレッドシートから取得したプレイヤー名ドロップダウン |
+| **設定・選択画面** | `inputPlayerName` | DIRECT | [FR-013] | プレイヤー名自由入力欄（本番モードのみ表示、localStorageから前回入力名を自動補完、常時編集可能） |
 | | `btnSelectDifficulty` (初級/中級/上級) | DIRECT | [FR-005] | 3段階の難易度を選択するタブボタングループ |
 | | `btnSelectMode` (練習/本番) | DIRECT | [FR-006] | 練習モードまたは本番モードを選択するトグルボタン |
 | | `btnLaunchGame` | DIRECT | [FR-001] | 選択した条件でゲームプレイを開始するボタン |
@@ -240,10 +240,13 @@ $$\text{Score} = \left( \sum (\text{CorrectChars} \times 100 \times \text{ComboM
 ### 6.2 Players シート (プレイヤーマスター)
 | カラム名 | 型 | 必須 | 説明 |
 | :--- | :--- | :---: | :--- |
-| `PlayerID` | String | ○ | 一意のプレイヤー識別子 (`PL-001`) |
-| `PlayerName` | String | ○ | 画面表示されるプレイヤー氏名 (`足場 太郎`) |
-| `Department` | String | - | 所属部署 (`機材管理部`) |
-| `Enabled` | Boolean | ○ | 有効フラグ (`TRUE`) |
+| `PlayerID` | String | ○ | 一意のプレイヤー識別子 (`PL-1788470000000-1234` / `P001`) |
+| `PlayerName` | String | ○ | 画面表示されるプレイヤー正式名称 (`山田 太郎`) |
+| `PlayerNameKey` | String | ○ | 同一人物判定用の正規化キー (NFKC, 小文字化, 空白正規化: `山田 太郎`) |
+| `Enabled` | Boolean | ○ | 有効フラグ (`TRUE` / `FALSE`) |
+| `SortOrder` | Number | ○ | ソート順 (`9999`) |
+| `CreatedAt` | String | ○ | 初回作成日時 (JST) |
+| `UpdatedAt` | String | ○ | 最終更新日時 (JST) |
 
 ### 6.3 Scores シート (プレイ履歴 & 本番スコア)
 | カラム名 | 型 | 必須 | 説明 |

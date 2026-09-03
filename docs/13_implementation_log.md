@@ -296,5 +296,47 @@
 
 ---
 
+## 12. Implementation Phase 8 Revised: Free-Entry Player Name, Browser Memory & Cross-Browser Player Resolution (2026-09-04)
+
+### 12.1 実装サマリー
+* **Authoritative Player Requirement Migration**:
+  * 従来のマスター事前選択方式を廃止し、本番モード開始時のプレイヤー名自由入力方式を全面実装。
+  * `PLAYER_NAME_IS_NOT_AUTHENTICATION`: プレイヤー名は認証・認可ではなく、表示用および同一表記識別用ラベルとして定義。
+  * `SAME_NORMALIZED_NAME_MEANS_SAME_PLAYER`: 全角・半角スペース、大文字・小文字（ASCII）、Unicode NFKC正規化により、表記揺れを単一の `PlayerNameKey` に集約。
+  * `LOCAL_STORAGE_NAME_IS_NOT_A_CREDENTIAL`: `localStorage` に前回の入力名を安全に記憶（`baseTypingGame.lastPlayerName.v1`）。次回開始時に自動入力。共有PC等での名前変更も常時可能。
+* **Backend Architecture & Google Spreadsheet Schema (v1.1.0)**:
+  * `Players` シートを 7 列スキーマ（`PlayerID`, `PlayerName`, `PlayerNameKey`, `Enabled`, `SortOrder`, `CreatedAt`, `UpdatedAt`）へマイグレーション。
+  * `Meta` シートの `SchemaVersion` を `1.1.0` へ更新。
+  * `clasp push -f` により GAS ソースコード 8 ファイルをリモート更新し、GAS Web App デプロイを新バージョンへ更新。
+  * `LockService` 排他制御下で `PlayerNameKey` による既存プレイヤー検索・自動新規採番（`PL-<timestamp>-<rand>`）を実装。
+* **Frontend UI & Game Loop Integration**:
+  * `src/storage/playerStorage.js`: 安全な `localStorage` 読み書きユーティリティ（例外ハンドリング・フォールバック完備）。
+  * `src/api/backendClient.js`: Simple Request 方式（`Content-Type: text/plain;charset=utf-8`）による GAS Web App API クライアント。
+  * `src/index.html` & `src/index.css`:
+    * 本番モード設定画面に `#inputPlayerName`（最大30文字、5色パレット厳格準拠、フォーカスアニメーション）を配置。
+    * ゲーム画面 HUD に `#hudPlayerBadge`（プレイヤー名バッジ）を追加。
+    * リザルト画面に `#resultSaveContainer`（保存中 / 保存完了 / 保存失敗＋再送信ボタン）を追加。
+  * `src/main.js`:
+    * 本番モード選択時: 入力欄を表示し `localStorage` から自動入力。出庫準備完了（START）クリック時に入力バリデーション（空・空白のみ拒絶、30文字以内）および `localStorage` への保存を実行。
+    * オフライン動作保証: ゲーム開始時は一切のネットワーク通信を行わず、即座に 3..2..1 カウントダウンを開始。
+    * 練習モード: プレイヤー名入力欄・HUDプレイヤーバッジ・リザルト保存コンテナを完全非表示（通信量ゼロ）。
+    * リザルト画面: ゲーム終了時にバックグラウンドでスコアを自動非同期送信。「スコア保存中...」→「スコア保存完了」を表示。
+    * リプレイ: 直前のプレイヤー名を保持して即座に再戦可能。
+* **Automated Tests**:
+  * 全自動テスト 合計 772 件 PASS（`772 / 772 PASS`）。
+  * `tests/testBackendFoundation.js`: スキーマ v1.1.0、7列構成、正規化、自動作成、表記揺れ同一ID解決、バリデーション単体テスト。
+  * `tests/testPhase8PlayerAndFrontend.js`: `localStorage` 記憶・上書き・例外安全・GameSession 統合テスト。
+* **Real Cloud Backend HTTP Acceptance Tests (`scripts/testRealGasBackend.js`)**:
+  * 実 Web App エンドポイントに対して 40 件のテストを実施し、全件 PASS（`40 / 40 PASS`）：
+    * 初回入力名による `PL-...` 自動採番。
+    * 全角スペース表記揺れ（`佐藤　テスト` vs `佐藤 テスト`）による同一 `PlayerID` 解決。
+    * 冪等重複送信防止、バリデーション（空文字・長大文字列・練習モード拒絶）、並行送信・同一IDレース処理の完全稼働を実証。
+* **Real Browser Verification & Visual Evidence**:
+  * 実ブラウザ（Chrome）にて入力欄表示、空文字バリデーションエラー、HUDプレイヤー名バッジ、練習モード非表示、`localStorage` による自動補完、リザルト画面の「スコア保存完了」バッジの正常表示を確認。
+  * スプレッドシート `Scores` および `Players` シートのテストデータをクリーンアップ完了。
+
+---
+
+
 
 
