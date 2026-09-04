@@ -296,7 +296,7 @@ export function getTruckSvg(truckType = TRUCK_TYPES.KEI_TRUCK, { loadStage = 0, 
   switch (truckType) {
     case TRUCK_TYPES.KEI_TRUCK:
       return `
-        <svg class="truck-svg kei-truck ${isShaking ? 'shake-mild' : ''}" viewBox="0 0 130 75" width="${meta.width}" height="${meta.height}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
+        <svg class="truck-svg kei-truck ${isShaking ? 'shake-mild' : ''}" viewBox="0 0 130 75" width="${meta.width}" height="${meta.height}" shape-rendering="crispEdges">
           <!-- Shadow -->
           <rect x="8" y="70" width="116" height="5" fill="${PALETTE.SHADOW}" rx="2" />
 
@@ -350,7 +350,7 @@ export function getTruckSvg(truckType = TRUCK_TYPES.KEI_TRUCK, { loadStage = 0, 
 
     case TRUCK_TYPES.CRANE_4T:
       return `
-        <svg class="truck-svg crane-4t-truck ${isShaking ? 'shake-mild' : ''}" viewBox="0 0 190 85" width="${meta.width}" height="${meta.height}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
+        <svg class="truck-svg crane-4t-truck ${isShaking ? 'shake-mild' : ''}" viewBox="0 0 190 85" width="${meta.width}" height="${meta.height}" shape-rendering="crispEdges">
           <!-- Shadow -->
           <rect x="10" y="80" width="172" height="5" fill="${PALETTE.SHADOW}" rx="2" />
 
@@ -416,7 +416,7 @@ export function getTruckSvg(truckType = TRUCK_TYPES.KEI_TRUCK, { loadStage = 0, 
     case TRUCK_TYPES.CRANE_15T:
     default:
       return `
-        <svg class="truck-svg crane-15t-truck ${isShaking ? 'shake-mild' : ''}" viewBox="0 0 250 95" width="${meta.width}" height="${meta.height}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
+        <svg class="truck-svg crane-15t-truck ${isShaking ? 'shake-mild' : ''}" viewBox="0 0 250 95" width="${meta.width}" height="${meta.height}" shape-rendering="crispEdges">
           <!-- Shadow -->
           <rect x="10" y="90" width="232" height="5" fill="${PALETTE.SHADOW}" rx="2" />
 
