@@ -1,5 +1,5 @@
 /**
- * Base Typing Game Backend — Unified JSON Response Builder
+ * TakamiyaTypingGame Backend — Unified JSON Response Builder
  */
 
 function createSuccessResponse(data) {

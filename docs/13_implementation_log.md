@@ -524,6 +524,67 @@
   * 既存 `v1.0.0` タグを一切変更・上書きせず、Phase 10B リリース時のコミットを指す状態を完全に維持。
 
 
+---
 
+## 17. Implementation Phase 12: GAS Frontend Migration, Global Rebrand & Visual Scene Corrections (2026-09-04)
 
-
+### 17.1 実装サマリー
+* **Initial State Audit & Baseline**:
+  * Formal State: `BASE_TYPING_GAME_V1_0_0_OPERATIONAL_HANDOFF_COMPLETE`
+  * Local HEAD: `41030dc`, Remote origin/main: `41030dc`, Tag: `v1.0.0`
+  * Baseline Automated Tests: 840 / 840 PASS
+  * Live GAS Regression Tests: 70 / 70 PASS
+* **Frontend Hosting Migration (GitHub Pages ➔ Google Apps Script Web App)**:
+  * 単一配布URL: `https://script.google.com/macros/s/AKfycbzdPNsWV5kNdtpsF91jkca3lkJSLdVxG_2Ux8V5a5f1kMWLJmogiUG8mzbSiRk3S3xeeQ/exec`
+  * `backend/gas/Code.gs` の `doGet(e)` にルーティングを実装：
+    * クエリパラメータなし（Bare `/exec`）➔ `HtmlService.createTemplateFromFile("Index").evaluate()` によりフロントエンド画面を提供。
+    * クエリパラメータ `op` が存在（`health`, `getPlayers`, `getRankings`）➔ 既存 JSON REST API を完全維持。
+    * `doPost(e)` による `submitScore` API も100%維持。
+  * **決定論的 GAS フロントエンドビルダー (`scripts/buildGasFrontend.js`)**:
+    * `esbuild` を導入し、`src/` 配下のNative ES Modulesを単一ブラウザクライアントバンドル `backend/gas/ClientBundle.html` へトランスパイル。
+    * `src/index.css` を `<style>` タグで囲んだ `backend/gas/Stylesheet.html` へ生成。
+    * `backend/gas/Index.html` テンプレートを生成し、Apps Script HtmlServiceパターンで安全にinclude。
+    * 生成バンドル内に未解決 `import`、相対ファイルパス、GitHub Pages依存が存在しないことを検証する自動テスト（`tests/testGasBuild.js`）を追加。
+* **Global Product Rebrand (`TakamiyaTypingGame` / `TTG`)**:
+  * Canonical Product Name: `TakamiyaTypingGame`
+  * Display Name: `TAKAMIYA TYPING GAME`（日本語文中: `Takamiya Typing Game`）
+  * Short Name / Alias: `TTG`
+  * Repository Slug: `takamiya-typing-game`
+  * `package.json`: `name: "takamiya-typing-game"`, `version: "1.1.0"`
+  * Backend Service Name: `TAKAMIYA_TYPING_GAME_BACKEND`（定数: `TTG_BACKEND`）
+  * Google Apps Script プロジェクト名: `TakamiyaTypingGame` へ変更。
+  * Google スプレッドシート名: `TakamiyaTypingGame DB` へ変更（ID: `1-HUuzXK27t2eRJEwgSMVO1bNVkVRwVTyzb4LftW5TX8` を維持）。
+  * `localStorage` キー移行:
+    * 新キー: `ttg.lastPlayerName.v1`
+    * `src/storage/playerStorage.js` に例外安全なマイグレーションロジックを実装（新キー存在時利用 ➔ なければ旧キー `baseTypingGame.lastPlayerName.v1` を読み出し・新キー保存・旧キー安全削除）。
+  * Local folder path: Workspace ContextおよびAI Development Coreの安定性を保つため、`base-typing-game` を Technical Exception として維持。
+* **UI Bespoke Pixel Inline SVG Icons (Zero OS Emoji)**:
+  * `src/visual/pixel/uiIconsSvg.js` を新規作成。5色パレット（`#FFFFFF`, `#F5FBDA`, `#D9EFBD`, `#B9D175`, `#450C3F`）に厳密に準拠した自作ピクセルインラインSVG体系を構築。
+  * モード選択カード: 文字代替（`[本]`、`[練]`）を完全撤廃し、本番モード＝物流トラック、練習モード＝メカニカルキーボードのピクセルSVGを配置。
+  * ランキングボタン: 表彰台・スコアボードピクセルSVG（`podium`）を配置。
+  * ステージバッジ: 現場記号ピクセルSVG（`stage`）を配置。
+  * SUCCESS / MISS フィードバック: キラキラ輝き（`sparkle`）および衝突・資材落下（`collision`）ピクセルSVGを表示。
+  * リザルト画面: スコア、正確率、コンボ等の主要指標横に小型ピクセルSVGを配置。
+  * OS絵文字・Unicode絵文字・外部アイコンライブラリの使用ゼロを検証。
+* **Visual Scene Corrections (15t大型トラック & 難易度別MISS資材落下)**:
+  * `src/visual/pixel/trucksSvg.js` の `TRUCK_METADATA`:
+    * 上級15tユニック車に `visualYOffset = -6` を設定。車体を上方に移動し、地面およびフォークリフトとの高さバランスを最適化。初級・中級トラックの位置は一切変更なし。
+    * 難易度別のMISS時資材落下ジオメトリ（`missDrop: { deltaX, deltaY, rotation }`）を `TRUCK_METADATA` に定義：
+      * Beginner: `dx: 48, dy: 14, rot: 18deg`（軽トラ手前の自然な空間へ着地）
+      * Intermediate: `dx: 40, dy: 10, rot: 16deg`（4tユニックキャブ手前へ着地）
+      * Advanced: `dx: 30, dy: 6, rot: 14deg`（15tユニック大型車体手前へ着地）
+  * `src/visual/animation/visualScene.js`:
+    * `renderTruck()` で `visualYOffset` を反映。
+    * `triggerMiss()` およびアニメーション更新ループで、トラック定義の `missDrop` パラメータを動的に参照して資材落下開始・着地座標を計算。
+* **GitHub Pages Cutover**:
+  * `.github/workflows/deploy-pages.yml` を削除。
+  * `.github/workflows/ci.yml`（CIテスト & GASフロントエンドビルド整合性検証のみ）へ置換。Pagesデプロイを停止。
+* **実機ブラウザ E2E & パフォーマンス検証**:
+  * GAS Web App 実URL（`https://script.google.com/macros/s/AKfycbzdPNsWV5kNdtpsF91jkca3lkJSLdVxG_2Ux8V5a5f1kMWLJmogiUG8mzbSiRk3S3xeeQ/exec`）にて実機検証を実施。
+  * Chrome / Edge での高速連続タイピング、キーボードフォーカス、日本語ローマ字判定、アニメーション（60fps）、スコア非同期保存（`"スコア保存完了"`）、ランキング画面表示を確認。
+  * recording: `gas_e2e_verification_1788530202551.webp`
+* **Automated Tests**:
+  * ベースライン: 840 テスト
+  * 新規追加テスト: 67 テスト（`tests/testRebrandAndSvg.js`, `tests/testGasBuild.js`）
+  * 合計: **907 / 907 PASS** (0 failed)
+  * 実稼働 GAS エンドポイント回帰テスト: **70 / 70 PASS** (0 failed)

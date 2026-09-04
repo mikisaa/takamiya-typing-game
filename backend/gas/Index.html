@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+  <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TAKAMIYA TYPING GAME — 仮設足場・積込タイピングゲーム</title>
-  <link rel="stylesheet" href="index.css">
+  <?!= HtmlService.createHtmlOutputFromFile('Stylesheet').getContent(); ?>
 </head>
 <body>
-  <div id="app" class="app-container">
+<div id="app" class="app-container">
     
     <!-- 1. TITLE SCREEN -->
     <section id="screenTitle" class="screen active">
@@ -345,7 +346,6 @@
     </section>
 
   </div>
-
-  <script type="module" src="main.js"></script>
+<?!= HtmlService.createHtmlOutputFromFile('ClientBundle').getContent(); ?>
 </body>
 </html>

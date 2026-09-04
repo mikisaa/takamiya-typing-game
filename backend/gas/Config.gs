@@ -1,10 +1,10 @@
 /**
- * Base Typing Game Backend — Configuration
+ * TakamiyaTypingGame Backend — Configuration
  * Google Apps Script Environment
  */
 
 var CONFIG = {
-  SERVICE_NAME: "BASE_TYPING_GAME_BACKEND",
+  SERVICE_NAME: "TAKAMIYA_TYPING_GAME_BACKEND",
   SCHEMA_VERSION: "1.1.0",
   TIMEZONE: "Asia/Tokyo",
 

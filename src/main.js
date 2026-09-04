@@ -5,6 +5,7 @@ import { GAME_CONFIG } from "./config/gameConfig.js";
 import { GameVisualScene } from "./visual/animation/visualScene.js";
 import { getLastPlayerName, setLastPlayerName } from "./storage/playerStorage.js";
 import { BackendClient } from "./api/backendClient.js";
+import { getStageIconSvg, getSuccessIconSvg, getMissIconSvg } from "./visual/pixel/uiIconsSvg.js";
 
 // DOM Screens
 const screens = {
@@ -328,9 +329,9 @@ function renderGameUI() {
   hudScoreVal.textContent = activeSession.getCurrentScore().toLocaleString();
   hudComboVal.textContent = activeSession.currentCombo;
 
-  // Background Stage (No OS emoji)
+  // Background Stage (No OS emoji, inline pixel SVG)
   const summary = activeSession.getSummary();
-  hudBgStageBadge.textContent = summary.backgroundStage.displayName;
+  hudBgStageBadge.innerHTML = `${getStageIconSvg(summary.backgroundStage.stage)}<span>${summary.backgroundStage.displayName}</span>`;
 
   // 3. Track Status
   trackForkliftTimer.textContent = `残り ${Math.max(0, activeSession.perQuestionTimeRemaining).toFixed(1)}s`;
@@ -338,15 +339,15 @@ function renderGameUI() {
   if (activeSession.state === GAME_STATES.SUCCESS_FEEDBACK) {
     trackStatusMsg.textContent = "積込完了 (SUCCESS)";
     feedbackBanner.className = "feedback-banner success";
-    feedbackBanner.textContent = "SUCCESS!";
+    feedbackBanner.innerHTML = `${getSuccessIconSvg()}<span>SUCCESS!</span>`;
   } else if (activeSession.state === GAME_STATES.MISS_FEEDBACK) {
     trackStatusMsg.textContent = "接触・資材落下 (MISS)";
     feedbackBanner.className = "feedback-banner miss";
-    feedbackBanner.textContent = "MISS!";
+    feedbackBanner.innerHTML = `${getMissIconSvg()}<span>MISS!</span>`;
   } else {
     trackStatusMsg.textContent = "積込走行中...";
     feedbackBanner.className = "feedback-banner";
-    feedbackBanner.textContent = "";
+    feedbackBanner.innerHTML = "";
   }
 
   // 4. Prompt & Target Display
@@ -431,7 +432,7 @@ async function submitProductionScore(summary) {
     reachedStage: summary.backgroundStage?.id || "GROUND",
     startedAt: summary.startedAt ? summary.startedAt.toISOString() : new Date().toISOString(),
     finishedAt: summary.finishedAt ? summary.finishedAt.toISOString() : new Date().toISOString(),
-    appVersion: "1.0.0"
+    appVersion: "1.1.0"
   };
 
   try {

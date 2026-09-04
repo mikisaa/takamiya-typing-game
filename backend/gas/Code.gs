@@ -1,12 +1,22 @@
 /**
- * Base Typing Game Backend — Main Entry Point Router
+ * TakamiyaTypingGame Backend & Frontend Router
  * Google Apps Script Web App
  */
 
 function doGet(e) {
   try {
-    var op = (e && e.parameter && e.parameter.op) ? String(e.parameter.op).trim() : "health";
+    var op = (e && e.parameter && e.parameter.op) ? String(e.parameter.op).trim() : "";
 
+    // 1. Bare Web App URL (/exec) serves Frontend HTML via Apps Script HtmlService
+    if (!op) {
+      return HtmlService.createTemplateFromFile("Index")
+        .evaluate()
+        .setTitle("TAKAMIYA TYPING GAME")
+        .addMetaTag("viewport", "width=device-width, initial-scale=1.0")
+        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    }
+
+    // 2. Existing JSON REST APIs
     if (op === "health") {
       return createSuccessResponse({
         service: CONFIG.SERVICE_NAME,

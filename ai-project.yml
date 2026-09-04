@@ -1,7 +1,7 @@
-﻿schema_version: 1
+schema_version: 1
 
 project:
-  name: base-typing-game
+  name: takamiya-typing-game
   type: web-app
 
 environment:
@@ -10,14 +10,14 @@ environment:
 features:
   - gas
   - google-sheets
-  - github-pages
+  - gas-htmlservice
 
 profiles:
   design:
     - web-standard
   technology:
     - browser-webapp
-    - github-pages-gas
+    - gas-webapp
 
 workflows:
   - web-app-development

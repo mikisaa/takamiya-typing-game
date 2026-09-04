@@ -1,5 +1,5 @@
 /**
- * Base Typing Game Backend — Scores Repository & Duplicate Protection
+ * TakamiyaTypingGame Backend — Scores Repository & Duplicate Protection
  */
 
 function findScoreBySubmissionId(submissionId, ss) {

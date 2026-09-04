@@ -1,7 +1,7 @@
-# Base Typing Game — API Contract Specification
+# TakamiyaTypingGame — API Contract Specification
 
-Google Apps Script Web App が提供する HTTP API のインターフェース仕様です。
-すべてのレスポンスは統一エンベロープ形式の JSON で返却されます。
+Google Apps Script Web App が提供する HTTP API およびフロントエンド配信のインターフェース仕様です。
+クエリパラメータなしの Bare アクセス時は Frontend HTML を配信し、API クエリ時は統一エンベロープ形式の JSON を返却します。
 
 ---
 
@@ -30,23 +30,31 @@ Google Apps Script Web App が提供する HTTP API のインターフェース�
 
 ---
 
-## 2. API Operations
+## 2. API Operations & Frontend Routing
+
+### 2.0 Bare URL: `GET /exec` (Frontend Delivery)
+パラメータなしでアクセスされた場合、Google Apps Script HtmlService によりフロントエンド画面を提供します。
+
+* **Method**: `GET`
+* **Response**: `HTML (text/html; charset=utf-8)`
+* **Content**: `backend/gas/Index.html`（CSSおよびClient JSバンドル内包）
+
+---
 
 ### 2.1 `GET ?op=health`
 バックエンドサービスの稼働状態・バージョン・タイムゾーン・現在時刻を確認します。
 
 * **Method**: `GET`
-* **Query Parameters**:
-  * `op`: `health` (未指定時のデフォルト)
+* **Query Parameters**: `op=health`
 * **Response `data`**:
   ```json
   {
     "ok": true,
     "data": {
-      "service": "BASE_TYPING_GAME_BACKEND",
-      "schemaVersion": "1.0.0",
+      "service": "TAKAMIYA_TYPING_GAME_BACKEND",
+      "schemaVersion": "1.1.0",
       "timezone": "Asia/Tokyo",
-      "serverTime": "2026-09-03T17:45:00+09:00"
+      "serverTime": "2026-09-04T17:45:00+09:00"
     }
   }
   ```
@@ -57,8 +65,7 @@ Google Apps Script Web App が提供する HTTP API のインターフェース�
 有効化されているプレイヤー（社員）の一覧を取得します。
 
 * **Method**: `GET`
-* **Query Parameters**:
-  * `op`: `getPlayers`
+* **Query Parameters**: `op=getPlayers`
 * **Response `data`**:
   ```json
   {
@@ -77,20 +84,48 @@ Google Apps Script Web App が提供する HTTP API のインターフェース�
     }
   }
   ```
-* **仕様備考**:
-  * `Enabled === true` のプレイヤーのみが返却されます。
-  * `SortOrder` 昇順、同一順位の場合は `PlayerName` 昇順でソートされます。
-  * 内部行番号や更新日時などのメタデータは含まれません。
 
 ---
 
-### 2.3 `POST` (Body: `submitScore`)
+### 2.3 `GET ?op=getRankings`
+期間および難易度ごとのランキングを取得します。
+
+* **Method**: `GET`
+* **Query Parameters**:
+  * `op`: `getRankings`
+  * `period`: `monthly` または `allTime` (デフォルト: `monthly`)
+  * `difficulty`: `BEGINNER`, `INTERMEDIATE`, `ADVANCED` (デフォルト: `BEGINNER`)
+* **Response `data`**:
+  ```json
+  {
+    "ok": true,
+    "data": {
+      "period": "monthly",
+      "difficulty": "BEGINNER",
+      "serverTime": "2026-09-04T17:45:00+09:00",
+      "totalPlayers": 2,
+      "entries": [
+        {
+          "rank": 1,
+          "playerId": "PL-001",
+          "playerName": "山田 太郎",
+          "score": 18450,
+          "accuracy": 98.38,
+          "maxCombo": 16,
+          "playedAt": "2026-09-04T16:01:30+09:00"
+        }
+      ]
+    }
+  }
+  ```
+
+---
+
+### 2.4 `POST` (Body: `submitScore`)
 本番モード（`PRODUCTION`）終了時のスコアを検証・永続化します。
 
 * **Method**: `POST`
-* **Transport Contract (Browser Cross-Origin Safe)**:
-  * **Headers**: `Content-Type: text/plain;charset=utf-8` (推奨)
-  * **Note**: Google Apps Script Web App はブラウザの CORS preflight (`OPTIONS` リクエスト) に対応していません。そのため、ブラウザからの通信時は `Content-Type: text/plain;charset=utf-8` を指定して Simple Request として送信します。GAS 側の `doPost(e)` は `e.postData.contents` から生 JSON をパースするため、同一のセマンティクスで 302 リダイレクトを経由し、ブラウザ側でレスポンス JSON を直接読み取ることができます。
+* **Headers**: `Content-Type: text/plain;charset=utf-8` (Simple Request 形式)
 * **Request Body**:
   ```json
   {
@@ -112,7 +147,7 @@ Google Apps Script Web App が提供する HTTP API のインターフェース�
       "reachedStage": "HIGHRISE",
       "startedAt": "2026-09-04T07:00:00.000Z",
       "finishedAt": "2026-09-04T07:01:30.000Z",
-      "appVersion": "1.0.0"
+      "appVersion": "1.1.0"
     }
   }
   ```
@@ -132,20 +167,6 @@ Google Apps Script Web App が提供する HTTP API のインターフェース�
         "playerId": "PL-1788470000000-4821",
         "playerName": "山田 太郎"
       }
-    }
-  }
-  ```
-
-* **重複送信時 (Idempotent Duplicate Response)**:
-  同一 `submissionId` が再送された場合、二重挿入は行わず初回の `scoreId` を返します。
-  ```json
-  {
-    "ok": true,
-    "data": {
-      "duplicate": true,
-      "scoreId": "SC-1788470000123-9182",
-      "submissionId": "SUB-1788392000000-8472",
-      "message": "Score with this submissionId already recorded."
     }
   }
   ```

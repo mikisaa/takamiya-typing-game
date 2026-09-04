@@ -15,9 +15,11 @@ import { runPaletteComplianceTests } from "./testPaletteCompliance.js";
 import { runBackendFoundationTests } from "./testBackendFoundation.js";
 import { runPhase8PlayerAndFrontendTests } from "./testPhase8PlayerAndFrontend.js";
 import { runRankingCoreTests } from "./testRankingCore.js";
+import { runRebrandAndSvgTests } from "./testRebrandAndSvg.js";
+import { runGasBuildTests } from "./testGasBuild.js";
 
 console.log("==================================================");
-console.log("BASE TYPING GAME — FULL AUTOMATED TEST SUITES");
+console.log("TAKAMIYA TYPING GAME — FULL AUTOMATED TEST SUITES");
 console.log("==================================================");
 
 let totalPassed = 0;
@@ -40,6 +42,8 @@ const suites = [
   { name: "Backend Architecture & GAS Foundation", fn: runBackendFoundationTests },
   { name: "Phase 8 Player Name & Frontend", fn: runPhase8PlayerAndFrontendTests },
   { name: "Ranking Core & Aggregation", fn: runRankingCoreTests },
+  { name: "Rebranding, SVGs & Visual Geometry", fn: runRebrandAndSvgTests },
+  { name: "GAS Frontend Deterministic Build", fn: runGasBuildTests },
   { name: "Full E2E Integration Loop", fn: runIntegrationGameLoopTest }
 ];
 

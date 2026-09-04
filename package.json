@@ -1,19 +1,25 @@
 {
-  "name": "base-typing-game",
-  "version": "1.0.0",
+  "name": "takamiya-typing-game",
+  "version": "1.1.0",
   "description": "2D Horizontal-scrolling Typing Game with Scaffold Material Loading Theme",
   "type": "module",
   "scripts": {
     "test": "node tests/runAllTests.js",
     "build:bundle": "node scripts/generateQuestionBundle.js",
+    "build:gas": "node scripts/buildGasFrontend.js",
     "start": "node scripts/devServer.js"
   },
   "keywords": [
     "typing-game",
     "pixel-art",
-    "scaffolding"
+    "scaffolding",
+    "takamiya-typing-game",
+    "ttg"
   ],
   "author": "mikisaa",
   "license": "UNLICENSED",
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
 }

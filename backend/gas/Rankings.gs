@@ -1,5 +1,5 @@
 /**
- * Base Typing Game Backend — Rankings Repository & Public Endpoint
+ * TakamiyaTypingGame Backend — Rankings Repository & Public Endpoint
  * Google Apps Script Environment
  */
 

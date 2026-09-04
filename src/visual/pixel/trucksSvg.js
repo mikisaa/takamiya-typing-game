@@ -18,19 +18,37 @@ export const TRUCK_METADATA = {
     name: "軽トラック",
     width: 130,
     height: 75,
-    collisionContactX: 620
+    collisionContactX: 620,
+    visualYOffset: 0,
+    missDrop: {
+      deltaX: 20,
+      deltaY: 28,
+      rotation: 30
+    }
   },
   [TRUCK_TYPES.CRANE_4T]: {
     name: "4tユニック車",
     width: 190,
     height: 85,
-    collisionContactX: 620
+    collisionContactX: 620,
+    visualYOffset: 0,
+    missDrop: {
+      deltaX: 14,
+      deltaY: 30,
+      rotation: 35
+    }
   },
   [TRUCK_TYPES.CRANE_15T]: {
     name: "15t大型ユニック車",
     width: 250,
     height: 95,
-    collisionContactX: 620
+    collisionContactX: 620,
+    visualYOffset: -6,
+    missDrop: {
+      deltaX: 8,
+      deltaY: 32,
+      rotation: 25
+    }
   }
 };
 

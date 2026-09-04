@@ -1,0 +1,62 @@
+name: CI Automated Tests & Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "ci-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run automated test suites
+        run: npm test
+
+      - name: Verify Question Bundle Integrity
+        run: node -e 'import { runBundleDriftTest } from "./tests/testQuestionBundleDrift.js"; const r = runBundleDriftTest(); if (r.failed > 0) process.exit(1);'
+
+      - name: Test GAS Frontend Deterministic Build
+        run: npm run build:gas
+
+      - name: Validate Production Artifacts
+        run: |
+          node -e '
+          import fs from "fs";
+          const required = [
+            "src/index.html",
+            "src/main.js",
+            "src/index.css",
+            "backend/gas/Index.html",
+            "backend/gas/Stylesheet.html",
+            "backend/gas/ClientBundle.html"
+          ];
+          for (const f of required) {
+            if (!fs.existsSync(f)) {
+              console.error("Missing artifact: " + f);
+              process.exit(1);
+            }
+          }
+          console.log("All production and GAS artifacts validated successfully.");
+          '

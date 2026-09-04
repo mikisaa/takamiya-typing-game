@@ -1,6 +1,6 @@
-# Base Typing Game — Google Spreadsheet Schema Specification
+# TakamiyaTypingGame — Google Spreadsheet Schema Specification
 
-Google Spreadsheet（DB名推奨: `Base Typing Game DB`）内に保持する3つのシートの正式スキーマ定義です。
+Google Spreadsheet（DB名: `TakamiyaTypingGame DB`）内に保持する3つのシートの正式スキーマ定義です。
 
 ---
 
@@ -20,7 +20,6 @@ Google Spreadsheet（DB名推奨: `Base Typing Game DB`）内に保持する3つ
 
 * ※ `PlayerNameKey` により、全角・半角スペースの違いやアルファベット大文字・小文字の違い、先行・末尾空白を吸収して同一人物をクロスブラウザで一意判定。
 * ※ 同姓同名の別人は意図的仕様として同一PlayerIDとして扱われます（`SAME_NORMALIZED_NAME_MEANS_SAME_PLAYER`）。
-
 
 ---
 
@@ -48,7 +47,7 @@ Google Spreadsheet（DB名推奨: `Base Typing Game DB`）内に保持する3つ
 | 16 | **StartedAtClient** | ISO String | - | クライアント側ゲーム開始日時。 | `2026-09-03T09:00:00.000Z` |
 | 17 | **FinishedAtClient** | ISO String | - | クライアント側ゲーム終了日時。 | `2026-09-03T09:01:30.000Z` |
 | 18 | **PlayedAtServer** | ISO String | ◯ | サーバー生成Authoritative日時 (Asia/Tokyo)。月判定用。 | `2026-09-03T18:01:30+09:00` |
-| 19 | **AppVersion** | String | ◯ | フロントエンドバージョン。 | `1.0.0` |
+| 19 | **AppVersion** | String | ◯ | フロントエンドバージョン。 | `1.1.0` |
 
 ---
 
@@ -59,10 +58,10 @@ Google Spreadsheet（DB名推奨: `Base Typing Game DB`）内に保持する3つ
 | # | 列名 (Column) | 型 (Type) | 必須 | 制約・説明 | 初期値 |
 | :- | :--- | :--- | :--: | :--- | :--- |
 | 1 | **Key** | String | ◯ | 設定項目キー | `SchemaVersion` |
-| 2 | **Value** | String | ◯ | 設定値 | `1.0.0` |
+| 2 | **Value** | String | ◯ | 設定値 | `1.1.0` |
 | 3 | **UpdatedAt** | ISO String | ◯ | 最終更新日時 (JST) | 構築時日時 |
 
 ### 初期投入レコード例:
 1. `SchemaVersion` = `1.1.0`
-2. `AppVersion` = `1.0.0`
+2. `AppVersion` = `1.1.0`
 3. `CreatedAt` = `<構築日時>`

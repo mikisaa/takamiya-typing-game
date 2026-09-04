@@ -1,5 +1,5 @@
 /**
- * Base Typing Game Backend — Request Validation
+ * TakamiyaTypingGame Backend — Request Validation
  */
 
 function normalizePlayerName(rawName) {

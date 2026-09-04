@@ -1,5 +1,5 @@
 /**
- * Base Typing Game Backend — Players Master Repository & Auto-Resolution
+ * TakamiyaTypingGame Backend — Players Master Repository & Auto-Resolution
  */
 
 function getEnabledPlayersList(ss) {

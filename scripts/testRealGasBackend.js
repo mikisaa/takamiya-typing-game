@@ -7,18 +7,39 @@
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzdPNsWV5kNdtpsF91jkca3lkJSLdVxG_2Ux8V5a5f1kMWLJmogiUG8mzbSiRk3S3xeeQ/exec";
 
 async function postJson(payload) {
-  const res = await fetch(GAS_WEB_APP_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(payload)
-  });
-  return await res.json();
+  let lastErr;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const res = await fetch(GAS_WEB_APP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload),
+        redirect: "follow"
+      });
+      const text = await res.text();
+      return JSON.parse(text);
+    } catch (e) {
+      lastErr = e;
+      await new Promise((r) => setTimeout(r, 1200));
+    }
+  }
+  throw lastErr;
 }
 
 async function getJson(params) {
   const url = `${GAS_WEB_APP_URL}?${new URLSearchParams(params).toString()}`;
-  const res = await fetch(url);
-  return await res.json();
+  let lastErr;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const res = await fetch(url, { redirect: "follow" });
+      const text = await res.text();
+      return JSON.parse(text);
+    } catch (e) {
+      lastErr = e;
+      await new Promise((r) => setTimeout(r, 1200));
+    }
+  }
+  throw lastErr;
 }
 
 async function runLiveTests() {
@@ -44,7 +65,7 @@ async function runLiveTests() {
   console.log("\n--- 1. Health Endpoint ---");
   const healthRes = await getJson({ op: "health" });
   assert(healthRes.ok === true, "health returns ok=true");
-  assert(healthRes.data.service === "BASE_TYPING_GAME_BACKEND", "health returns service name");
+  assert(healthRes.data.service === "TAKAMIYA_TYPING_GAME_BACKEND", "health returns service name");
   assert(healthRes.data.schemaVersion === "1.1.0", "health returns schemaVersion 1.1.0");
   assert(healthRes.data.timezone === "Asia/Tokyo", "health returns timezone Asia/Tokyo");
   assert(Boolean(healthRes.data.serverTime), "health returns serverTime");

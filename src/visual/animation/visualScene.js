@@ -205,13 +205,19 @@ export class GameVisualScene {
 
     // Forklift position at collision
     const forkliftX = this.START_X + this.currentProgress * (this.CONTACT_X - this.START_X);
+    const meta = TRUCK_METADATA[this.truckType] || TRUCK_METADATA.KEI_TRUCK;
+    const missDrop = meta.missDrop || { deltaX: 18, deltaY: 30, rotation: 35 };
+
     this.fallingLoad = {
       type: this.currentLoadType,
       startX: forkliftX + 54,
       startY: this.GROUND_Y - 22,
       x: forkliftX + 54,
       y: this.GROUND_Y - 22,
-      rotation: 0
+      rotation: 0,
+      deltaX: missDrop.deltaX,
+      deltaY: missDrop.deltaY,
+      targetRotation: missDrop.rotation
     };
     this.activeEffect = {
       type: "BURST",
@@ -290,9 +296,12 @@ export class GameVisualScene {
       // Falling load physics (falls forward to ground with rotation)
       if (this.fallingLoad) {
         const fallProgress = Math.min(1.0, t / 0.35);
-        this.fallingLoad.x = this.fallingLoad.startX + fallProgress * 18;
-        this.fallingLoad.y = this.fallingLoad.startY + fallProgress * fallProgress * 30;
-        this.fallingLoad.rotation = fallProgress * 35;
+        const deltaX = this.fallingLoad.deltaX !== undefined ? this.fallingLoad.deltaX : 18;
+        const deltaY = this.fallingLoad.deltaY !== undefined ? this.fallingLoad.deltaY : 30;
+        const targetRot = this.fallingLoad.targetRotation !== undefined ? this.fallingLoad.targetRotation : 35;
+        this.fallingLoad.x = this.fallingLoad.startX + fallProgress * deltaX;
+        this.fallingLoad.y = this.fallingLoad.startY + fallProgress * fallProgress * deltaY;
+        this.fallingLoad.rotation = fallProgress * targetRot;
       }
     }
 
@@ -315,7 +324,11 @@ export class GameVisualScene {
   renderTruck() {
     if (!this.truckLayer) return;
 
-    this.truckLayer.style.transform = `translate(0px, ${this.truckPopFloatY}px) scale(${this.truckPopScale})`;
+    const meta = TRUCK_METADATA[this.truckType] || TRUCK_METADATA.KEI_TRUCK;
+    const visualYOffset = meta.visualYOffset || 0;
+    const yOffset = visualYOffset + this.truckPopFloatY;
+
+    this.truckLayer.style.transform = `translate(0px, ${yOffset}px) scale(${this.truckPopScale})`;
     this.truckLayer.innerHTML = getTruckSvg(this.truckType, {
       loadStage: this.truckLoadStage,
       isShaking: this.isTruckShaking

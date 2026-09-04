@@ -60,7 +60,7 @@ export function runBackendFoundationTests() {
   }
 
   // 1. Schema & Config Definitions
-  assert(BACKEND_CONFIG.SERVICE_NAME === "BASE_TYPING_GAME_BACKEND", "Service name matches specification");
+  assert(BACKEND_CONFIG.SERVICE_NAME === "TAKAMIYA_TYPING_GAME_BACKEND", "Service name matches specification");
   assert(BACKEND_CONFIG.SCHEMA_VERSION === "1.1.0", "Schema version is 1.1.0");
   assert(BACKEND_CONFIG.TIMEZONE === "Asia/Tokyo", "Authoritative timezone is Asia/Tokyo");
   assert(BACKEND_CONFIG.SCHEMAS.PLAYERS_HEADERS.length === 7, "Players sheet has 7 columns (including PlayerNameKey)");
@@ -89,7 +89,7 @@ export function runBackendFoundationTests() {
   const { db, service } = createTestEnv();
   const healthRes = service.health();
   assert(healthRes.ok === true, "health returns ok=true");
-  assert(healthRes.data.service === "BASE_TYPING_GAME_BACKEND", "health data contains service name");
+  assert(healthRes.data.service === "TAKAMIYA_TYPING_GAME_BACKEND", "health data contains service name");
   assert(healthRes.data.schemaVersion === "1.1.0", "health data contains schemaVersion 1.1.0");
   assert(healthRes.data.timezone === "Asia/Tokyo", "health data specifies Asia/Tokyo timezone");
   assert(Boolean(healthRes.data.serverTime), "health data contains serverTime");

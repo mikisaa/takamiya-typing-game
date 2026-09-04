@@ -1,5 +1,5 @@
 /**
- * Base Typing Game Backend — Spreadsheet Management & Formula Protection
+ * TakamiyaTypingGame Backend — Spreadsheet Management & Formula Protection
  */
 
 function getDatabaseSpreadsheet() {
