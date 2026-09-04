@@ -444,6 +444,44 @@
 
 ---
 
+## 15. Implementation Phase 10B: GitHub Pages Controlled Production Deployment & Final E2E Acceptance (2026-09-04)
+
+### 15.1 実装サマリー
+* **GitHub Repository & Pages Setup**:
+  * Authoritative Repository: `https://github.com/mikisaa/base-typing-game`
+  * Owner: `mikisaa`, Repo: `base-typing-game`, Visibility: `public`
+  * Remote `origin` を設定し、`main` ブランチのトラッキングを確立。
+  * Pages 設定: GitHub Actions ワークフローによるデプロイ方式（`build_type: workflow`）を有効化。
+* **Production Deployment Workflow (`.github/workflows/deploy-pages.yml`)**:
+  * Official Actions: `actions/checkout@v4`, `actions/setup-node@v4`, `actions/configure-pages@v5`, `actions/upload-pages-artifact@v3`, `actions/deploy-pages@v4` を採用。
+  * Concurrency: `group: "pages"`, `cancel-in-progress: false` による競合防止。
+  * Permissions: `contents: read`, `pages: write`, `id-token: write` を最小限設定。
+  * ゲート検証: CI 上で `npm ci` ➔ `npm test`（840 PASS） ➔ Question Bundle Drift チェック ➔ 静的アセット必須構成検証を自動実行。
+  * **Production Artifact Isolation**: `src/` ディレクトリのみを Pages アーティファクトとしてアップロード。`backend/`, `docs/`, `tests/`, `scripts/`, `package.json`, `.clasp.json` 等の開発・内部ファイルは 404 となり一切非公開。
+* **Production URL 確立**:
+  * Authoritative Production URL: `https://mikisaa.github.io/base-typing-game/`（HTTPS 200 OK、Mixed Content ゼロ）
+* **本番環境実機 E2E 受入検証**:
+  * **初期ロード & UI アイデンティティ**: Chrome / Edge で `BASE TYPING GAME`, `Version 1.0.0 (Unified Botanical Palette)` を確認。404 ゼロ、CORS エラー ゼロ、コンソール致命的エラー ゼロ。
+  * **プレイヤー名記憶 & 自由入力**: `RELEASE SMOKE TEST` 入力 ➔ リロード後の自動補完 ➔ 自由編集（ロックなし）を検証。
+  * **初級 E2E**: 90秒グローバルタイマー完走 ➔ 軽トラック・フォークリフト・背景アニメーション ➔ スコア非同期送信（`2960`点） ➔ 「スコア保存完了」 ➔ リザルトからランキング遷移 ➔ 「今月」「歴代」で自プレイヤーハイライト表示を確認。
+  * **中級 / 上級 E2E**: 4tユニック・15tユニックのスプライト表示、動的タイマー、タイピング正常性を確認。
+  * **練習モード E2E**: プレイヤー名入力非表示、HUD バッジ非表示、タイマー `PRACTICE`（無制限）、スコア非送信（DB 追加なし）、リザルト画面に「ランキングを見る」ボタン非表示を確認。
+  * **Microsoft Edge 受入 & クロスブラウザ PlayerID 集約**:
+    * Chrome と Edge の `localStorage` 独立分離（初期状態 null）を確認。
+    * Edge から同名 `RELEASE SMOKE TEST` で送信したスコアが、GAS バックエンド側で同一の `PlayerID`（`PL-1788523692693-9848`）へと集約され、ランキングでも単一エントリーとして最高スコア更新（`3500`点）されることを実証。
+  * **レスポンシブ検証**: 1920×1080, 1366×768, 1280×720 にて UI 崩れ・クリッピングなしを確認。
+* **本番テストデータ クリーンアップ**:
+  * Google スプレッドシート `Scores` シート: 2行目以降の全テストスコア行を削除（ヘッダー行のみ保持）。
+  * Google スプレッドシート `Players` シート: 2行目以降の全テストプレイヤー行（`TEST001`, `RELEASE SMOKE TEST` 等）を削除（ヘッダー行のみ保持）。
+  * テスト端末ブラウザ: `localStorage.clear()` を実行し、残留プレイヤー名を全消去。
+  * クリーンアップ後疎通: タイトル画面正常表示、本番モード入力欄が空、ランキング画面が空状態メッセージ（`totalPlayers: 0`, `entries: []`）となることを本番 URL 上で確認。
+* **Release Tag**:
+  * Git タグ: `v1.0.0`
+* **Scope Exclusions Maintained**:
+  * 新規機能（BGM, サウンド, 実績, 新モード, 管理画面等）: `NONE`
+  * AI Development Core: 変更なし
+  * 全自動テスト 840件 全件 PASS 維持。
+
 
 
 

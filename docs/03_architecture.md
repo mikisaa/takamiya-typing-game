@@ -294,3 +294,22 @@ base-typing-game/
    - バックエンド SchemaVersion: `1.1.0`
    - Git タグおよびコミット履歴に基づく決定論的ロールバック手順を確立。
 
+### 7.3 Production Deployment & Operational Verification (Phase 10B)
+* **Authoritative Production URL**: `https://mikisaa.github.io/base-typing-game/`
+* **Deployment Mechanism**: GitHub Actions (`.github/workflows/deploy-pages.yml`)
+* **Deployment Trigger**: `push: [main]` および `workflow_dispatch`
+* **Workflow Permissions**: `contents: read`, `pages: write`, `id-token: write`
+* **Concurrency**: `group: "pages"`, `cancel-in-progress: false`
+* **Official Actions Used**:
+  * `actions/checkout@v4`
+  * `actions/setup-node@v4`
+  * `actions/configure-pages@v5`
+  * `actions/upload-pages-artifact@v3` (`path: 'src'`)
+  * `actions/deploy-pages@v4`
+* **Production Artifact Isolation**:
+  * 公開対象: `src/` 配下のみ（HTML, CSS, ES Modules, Assets）
+  * 非公開（404検証済み）: `backend/`, `docs/`, `tests/`, `scripts/`, `.clasp.json`, `package.json`, Git メタデータ等
+* **Rollback Architecture**:
+  * GitHub Pages は Git コミットと 1 対 1 で連動。
+  * ロールバック時は Force Push ではなく `git revert <commit>` を `main` へ Push し、Actions 経由で再デプロイを実施。
+
