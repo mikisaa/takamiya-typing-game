@@ -410,6 +410,41 @@
 
 ---
 
+## 14. Implementation Phase 10A: Production Frontend Hosting Architecture & Release Readiness Gate (2026-09-04)
+
+### 14.1 実装サマリー
+* **Hosting Architecture Audit & Feasibility**:
+  * **Option A: Google Apps Script HtmlService (`REJECT`)**:
+    * フロントエンドの 25 以上の ES Modules（`import`/`export`）を直接配信できず、インライン化または単一バンドル化（Webpack/Rollup/Vite）へのビルドパイプライン再構築が必須となる。
+    * iframe サンドボックス（`*.script.googleusercontent.com`）によるキーボードイベント・フォーカス阻害リスク。
+    * サードパーティストレージ分割による `localStorage` 喪失・制限リスク。
+  * **Option B: GitHub Pages (`PASS` — 正式採用)**:
+    * 現在のコードベース（Vanilla CSS, Native ES Modules, SVG Pixel Sprites）をそのまま無変換・Zero-Build で配信可能。
+    * Top-Level Origin（`https://<org>.github.io/<repo>/`）での動作が保証され、`localStorage` の第一者永続性が完全担保。
+    * Simple Request（`POST text/plain;charset=utf-8`）による GAS Web App とのクロスオリジン通信、および全路 HTTPS による Mixed Content ゼロを実証。
+    * グローバル CDN による高速初期ロード（< 1s）および Git SSOT との完全一致。
+  * **Option C: 社内共有フォルダ / その他 SaaS (`REJECT`)**:
+    * 会社制約（Forms, Power Apps, Automate, SharePoint, Vercel, Firebase, Supabase 禁止）およびブラウザセキュリティ制限（`file://` による `fetch`/`localStorage` 阻害）に基づき却下。
+* **Zero-Build & Question SSOT Integrity**:
+  * `takamiya-typing-game-master-v3.csv`（180問）が引き続き Question Master SSOT。
+  * `npm run build:bundle` で生成された `src/data/defaultQuestions.js` は Git 管理下にあり、本番デプロイ時に追加のバンドラー構築は不要。
+* **Production Versioning Contract**:
+  * Frontend Application Version: `1.0.0`（`package.json`, `index.html`, スコア送信メタデータ）
+  * Backend SchemaVersion: `1.1.0`（スプレッドシート `Meta` シート, 7列 `Players` スキーマ）
+* **TEST001 Production Handling**:
+  * `Scores` シートはヘッダーのみ（スコア 0件）のためランキングへは一切露出しない。
+  * 本番運用開始前チェックリストとして `TEST001` の無効化（`Enabled: FALSE`）または隔離を定義。
+* **Production Acceptance Matrix Defined**:
+  * 次工程（Phase 10B）で実施する本番 E2E 検証マトリクス（本番モード一連フロー、練習モード非送信、クロスブラウザ集約、パフォーマンス基準）を確定。
+* **Scope Exclusions Maintained**:
+  * Production Frontend Deployment: `NOT IMPLEMENTED`（次工程 Phase 10B にて実施）
+  * 機能追加（BGM, サウンド, 実績, 管理画面等）: `NONE`
+  * AI Development Core: 変更なし
+  * 全自動テスト 840件 全件 PASS 維持。
+
+---
+
+
 
 
 

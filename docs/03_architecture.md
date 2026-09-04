@@ -260,3 +260,37 @@ base-typing-game/
    - [FR-012, FR-013, FR-015] ランキング・プレイヤー・GAS ➔ `gasApiClient.js` & `gas/Code.js`
    - [FR-014] Question Master v3 SSOT ➔ `data/questions/takamiya-typing-game-master-v3.csv` & `defaultQuestions.js`
    - [FR-016] 動的走行時間モデル & Config ➔ `gameConfig.js` (文字数連動算出式)
+
+---
+
+## 7. Production Frontend Hosting Architecture & Release Gate (Phase 10A)
+
+### 7.1 Authoritative Hosting Decision
+* **採用方式**: **GitHub Pages (静的Webホスティング)**
+* **判定結果**: `PASS`（正式採用）
+* **評価対象外/却下**:
+  * `GAS HtmlService` (`REJECT`): ES Modules のネイティブ解決不可（バンドル必須）、iframe サンドボックスによるキーボードイベント・フォーカス阻害、サードパーティ Cookie/Storage 分割による `localStorage` 喪失リスクのため却下。
+  * `社内共有フォルダ (file://)` (`REJECT`): ブラウザセキュリティ制限により `fetch` / `localStorage` が動作不可のため却下。
+  * `Vercel / Firebase / Supabase` (`REJECT`): 会社制約により禁止。
+
+### 7.2 アーキテクチャ整合性と運用設計
+1. **Zero-Build ES Modules 配信**:
+   - `src/` 配下の HTML/CSS/ES Modules をそのまま配信。
+   - ブラウザが `<script type="module" src="main.js">` 経由で依存モジュール群を非同期直接解決。バンドラーによるビルドパイプラインの保守負担を完全排除。
+2. **Top-Level Origin 保証**:
+   - `https://<org-or-user>.github.io/<repo>/` の独立した第一者オリジン（Top-level Window）で動作。
+   - `localStorage`（`baseTypingGame.lastPlayerName.v1`）が iframe 分割制限を受けず恒久的に安定動作。
+3. **バックエンド通信 & CORS**:
+   - デプロイ済み GAS Web App（`https://script.google.com/.../exec`）へ直接通信。
+   - 単純リクエスト（`Content-Type: text/plain;charset=utf-8`）および HTTPS 同士の通信により、CORS preflight および Mixed Content エラーはゼロ。
+4. **セキュリティ & 公開性境界**:
+   - `PLAYER_NAME_IS_NOT_AUTHENTICATION`
+   - `ANONYMOUS_WEB_APP_ENDPOINT`
+   - `WEB_APP_URL_IS_NOT_A_SECRET`
+   - `RANKING_PLAYER_NAMES_ARE_VISIBLE_TO_ENDPOINT_CALLERS`
+   - クライアントコードに秘匿情報（API Key / Token 等）は一切含めない。
+5. **バージョン管理 & ロールバック**:
+   - フロントエンド Release Version: `1.0.0`
+   - バックエンド SchemaVersion: `1.1.0`
+   - Git タグおよびコミット履歴に基づく決定論的ロールバック手順を確立。
+
