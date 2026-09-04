@@ -36,7 +36,7 @@ HTML5, Vanilla CSS, Native ES Modules を開発の Authoritative Source とし�
 
 | ドメイン | 本番 SSOT | 役割 |
 |---|---|---|
-| **App Source** | Git Repository | 開発・コードの真実の源泉 |
+| **App Source** | Git Repository | 開発・コードの真実の源泉 (`https://github.com/mikisaa/takamiya-typing-game`) |
 | **Production Frontend Runtime** | Google Apps Script Web App | `/exec` で HTML Service フロントエンドを直接配信 |
 | **Frontend Build Source** | `src/` (Native ES Modules, CSS) | 開発用の分割モジュール |
 | **GAS Deployment Artifact** | `backend/gas/` (generated HTML bundle) | `build:gas` で自動生成される自己完結成果物 |

@@ -9,7 +9,7 @@
 | コンポーネント | 採用技術・プラットフォーム | 本番識別情報 / URL |
 | :--- | :--- | :--- |
 | **Frontend Runtime** | Google Apps Script (GAS) Web App (HtmlService) | `https://script.google.com/macros/s/AKfycbzdPNsWV5kNdtpsF91jkca3lkJSLdVxG_2Ux8V5a5f1kMWLJmogiUG8mzbSiRk3S3xeeQ/exec` |
-| **Source Code (SSOT)**| GitHub Repository | `https://github.com/mikisaa/base-typing-game` (または rename 後 `takamiya-typing-game`) |
+| **Source Code (SSOT)**| GitHub Repository | `https://github.com/mikisaa/takamiya-typing-game` |
 | **Production Branch**| Git Branch | `main` |
 | **Release Identity** | Git Tag / GitHub Release | `v1.1.0` |
 | **Backend Runtime**  | Google Apps Script (GAS) Web App | 同上（Frontend と単一エンドポイントで共存） |
