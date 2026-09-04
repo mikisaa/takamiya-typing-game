@@ -1,5 +1,6 @@
 import { BACKEND_CONFIG } from "./backendConfig.js";
-import { validateSubmitScoreRequest } from "./backendValidator.js";
+import { validateSubmitScoreRequest, validateGetRankingsQuery } from "./backendValidator.js";
+import { aggregateRankings } from "./rankingCore.js";
 
 /**
  * Backend Service Orchestrator
@@ -40,6 +41,44 @@ export class BackendService {
         }
       };
     }
+  }
+
+  getRankings(queryParams = {}) {
+    const valResult = validateGetRankingsQuery(queryParams);
+    if (!valResult.valid) {
+      return {
+        ok: false,
+        error: {
+          code: valResult.code,
+          message: valResult.message
+        }
+      };
+    }
+
+    const { sanitized } = valResult;
+    let targetPlayerId = null;
+    if (sanitized.playerNameKey) {
+      const playerRecord = this.db.findPlayerByNameKey(sanitized.playerNameKey);
+      if (playerRecord) {
+        targetPlayerId = playerRecord.PlayerID;
+      }
+    }
+
+    const allScores = this.db.getAllScores();
+    const allPlayers = this.db.players || [];
+
+    const rankingData = aggregateRankings(allScores, allPlayers, {
+      period: sanitized.period,
+      difficulty: sanitized.difficulty,
+      limit: sanitized.limit,
+      targetPlayerId: targetPlayerId,
+      currentMonthKey: queryParams.currentMonthKey
+    });
+
+    return {
+      ok: true,
+      data: rankingData
+    };
   }
 
   submitScore(requestData) {

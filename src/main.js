@@ -11,12 +11,14 @@ const screens = {
   title: document.getElementById("screenTitle"),
   setup: document.getElementById("screenSetup"),
   game: document.getElementById("screenGame"),
-  result: document.getElementById("screenResult")
+  result: document.getElementById("screenResult"),
+  ranking: document.getElementById("screenRanking")
 };
 
 // Title Screen Elements
 const btnStartProduction = document.getElementById("btnStartProduction");
 const btnStartPractice = document.getElementById("btnStartPractice");
+const btnOpenRanking = document.getElementById("btnOpenRanking");
 
 // Setup Screen Elements
 const setupModeTitle = document.getElementById("setupModeTitle");
@@ -77,14 +79,40 @@ const resultSaveContainer = document.getElementById("resultSaveContainer");
 const resultSaveStatus = document.getElementById("resultSaveStatus");
 const btnRetrySubmit = document.getElementById("btnRetrySubmit");
 const btnResultReplay = document.getElementById("btnResultReplay");
+const btnResultRanking = document.getElementById("btnResultRanking");
 const btnResultTitle = document.getElementById("btnResultTitle");
 
-// Application State
+// Ranking Screen Elements
+const tabPeriodMonthly = document.getElementById("tabPeriodMonthly");
+const tabPeriodAllTime = document.getElementById("tabPeriodAllTime");
+const tabDiffBeginner = document.getElementById("tabDiffBeginner");
+const tabDiffIntermediate = document.getElementById("tabDiffIntermediate");
+const tabDiffAdvanced = document.getElementById("tabDiffAdvanced");
+const rankingStatusContainer = document.getElementById("rankingStatusContainer");
+const rankingLoading = document.getElementById("rankingLoading");
+const rankingEmpty = document.getElementById("rankingEmpty");
+const rankingError = document.getElementById("rankingError");
+const btnRankingRetry = document.getElementById("btnRankingRetry");
+const rankingTableContainer = document.getElementById("rankingTableContainer");
+const rankingTableBody = document.getElementById("rankingTableBody");
+const rankingCurrentPlayerBox = document.getElementById("rankingCurrentPlayerBox");
+const cpRank = document.getElementById("cpRank");
+const cpName = document.getElementById("cpName");
+const cpScore = document.getElementById("cpScore");
+const cpAccuracy = document.getElementById("cpAccuracy");
+const cpCombo = document.getElementById("cpCombo");
+const btnRankingBackToTitle = document.getElementById("btnRankingBackToTitle");
+
+// Application & Ranking State
 const backendClient = new BackendClient();
 let lastSubmittedPayload = null;
 let activeSession = null;
 let selectedMode = GAME_MODES.PRODUCTION;
 let selectedDifficulty = "BEGINNER";
+let activeRankingPeriod = "MONTHLY";
+let activeRankingDifficulty = "BEGINNER";
+let rankingRequestToken = 0;
+const rankingCache = new Map();
 let animationFrameId = null;
 let lastTimestamp = 0;
 let previousSessionState = null;
@@ -346,11 +374,13 @@ function renderResultScreen() {
     resultMainTitle.textContent = "練習セッション終了";
     resultScoreBanner.style.display = "none";
     if (resultSaveContainer) resultSaveContainer.style.display = "none";
+    if (btnResultRanking) btnResultRanking.style.display = "none";
   } else {
     resultHeaderBadge.textContent = "GAME FINISHED";
     resultMainTitle.textContent = "本番リザルト";
     resultScoreBanner.style.display = "flex";
     resultFinalScore.textContent = summary.score.toLocaleString();
+    if (btnResultRanking) btnResultRanking.style.display = "inline-flex";
     if (resultSaveContainer) {
       resultSaveContainer.style.display = "block";
       resultSaveStatus.textContent = "スコア保存中...";
@@ -500,6 +530,237 @@ btnResultTitle.addEventListener("click", () => {
   activeSession = null;
   showScreen("title");
 });
+
+// 8. Ranking Screen Controller & Stale Protection
+function updateRankingTabUI() {
+  if (tabPeriodMonthly && tabPeriodAllTime) {
+    const isMonthly = activeRankingPeriod === "MONTHLY";
+    tabPeriodMonthly.classList.toggle("active", isMonthly);
+    tabPeriodMonthly.setAttribute("aria-selected", isMonthly ? "true" : "false");
+    tabPeriodAllTime.classList.toggle("active", !isMonthly);
+    tabPeriodAllTime.setAttribute("aria-selected", !isMonthly ? "true" : "false");
+  }
+
+  const diffTabs = [
+    { tab: tabDiffBeginner, diff: "BEGINNER" },
+    { tab: tabDiffIntermediate, diff: "INTERMEDIATE" },
+    { tab: tabDiffAdvanced, diff: "ADVANCED" }
+  ];
+
+  diffTabs.forEach(({ tab, diff }) => {
+    if (tab) {
+      const isSelected = activeRankingDifficulty === diff;
+      tab.classList.toggle("active", isSelected);
+      tab.setAttribute("aria-selected", isSelected ? "true" : "false");
+    }
+  });
+}
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function renderRankingData(data) {
+  if (rankingLoading) rankingLoading.style.display = "none";
+  if (rankingError) rankingError.style.display = "none";
+
+  const entries = data.entries || [];
+  const rememberedName = getLastPlayerName();
+
+  if (entries.length === 0) {
+    if (rankingEmpty) {
+      rankingEmpty.textContent = data.period === "MONTHLY"
+        ? "今月の記録はまだありません"
+        : "記録はまだありません";
+      rankingEmpty.style.display = "block";
+    }
+    if (rankingTableContainer) rankingTableContainer.style.display = "none";
+    if (rankingCurrentPlayerBox) rankingCurrentPlayerBox.style.display = "none";
+    return;
+  }
+
+  if (rankingEmpty) rankingEmpty.style.display = "none";
+  if (rankingTableContainer) rankingTableContainer.style.display = "block";
+
+  if (rankingTableBody) {
+    rankingTableBody.innerHTML = "";
+
+    entries.forEach((item) => {
+      const tr = document.createElement("tr");
+
+      // Top 3 row styling (no gold/silver/bronze, palette compliant)
+      if (item.rank === 1) tr.classList.add("rank-row-top1");
+      else if (item.rank === 2) tr.classList.add("rank-row-top2");
+      else if (item.rank === 3) tr.classList.add("rank-row-top3");
+
+      // Highlight current player row if matching remembered name or currentPlayer rank
+      const isCurrentPlayer = (rememberedName && item.playerName === rememberedName) ||
+        (data.currentPlayer && data.currentPlayer.rank === item.rank && data.currentPlayer.playerName === item.playerName);
+
+      if (isCurrentPlayer) {
+        tr.classList.add("rank-row-current-player");
+      }
+
+      tr.innerHTML = `
+        <td class="col-rank"><span class="rank-num-badge ${item.rank === 1 ? "rank-top1-badge" : ""}">${item.rank}</span></td>
+        <td class="col-player"><div class="ranking-player-cell" title="${escapeHtml(item.playerName)}">${escapeHtml(item.playerName)}</div></td>
+        <td class="col-score">${item.score.toLocaleString()}</td>
+        <td class="col-accuracy">${item.accuracy.toFixed(1)}%</td>
+        <td class="col-combo">${item.maxCombo}</td>
+      `;
+
+      rankingTableBody.appendChild(tr);
+    });
+  }
+
+  // Handle current player badge outside TOP 10
+  if (data.currentPlayer && data.currentPlayer.rank > entries.length && rankingCurrentPlayerBox) {
+    rankingCurrentPlayerBox.style.display = "flex";
+    if (cpRank) cpRank.textContent = `${data.currentPlayer.rank}位`;
+    if (cpName) {
+      cpName.textContent = data.currentPlayer.playerName;
+      cpName.title = data.currentPlayer.playerName;
+    }
+    if (cpScore) cpScore.textContent = data.currentPlayer.score.toLocaleString();
+    if (cpAccuracy) cpAccuracy.textContent = `正答率 ${data.currentPlayer.accuracy.toFixed(1)}%`;
+    if (cpCombo) cpCombo.textContent = `MAX ${data.currentPlayer.maxCombo}`;
+  } else if (rankingCurrentPlayerBox) {
+    rankingCurrentPlayerBox.style.display = "none";
+  }
+}
+
+async function loadAndDisplayRankings(forceFresh = false) {
+  updateRankingTabUI();
+
+  const cacheKey = `${activeRankingPeriod}_${activeRankingDifficulty}`;
+
+  // If cached and not forcing fresh fetch, render immediately
+  if (!forceFresh && rankingCache.has(cacheKey)) {
+    renderRankingData(rankingCache.get(cacheKey));
+    return;
+  }
+
+  // Show loading state, hide table & errors
+  if (rankingLoading) rankingLoading.style.display = "block";
+  if (rankingEmpty) rankingEmpty.style.display = "none";
+  if (rankingError) rankingError.style.display = "none";
+  if (rankingTableContainer) rankingTableContainer.style.display = "none";
+  if (rankingCurrentPlayerBox) rankingCurrentPlayerBox.style.display = "none";
+
+  const token = ++rankingRequestToken;
+  const rememberedName = getLastPlayerName();
+
+  try {
+    const res = await backendClient.getRankings({
+      period: activeRankingPeriod,
+      difficulty: activeRankingDifficulty,
+      limit: 10,
+      playerName: rememberedName || null
+    });
+
+    // Stale response check: discard if user has changed tabs since request was fired
+    if (token !== rankingRequestToken) {
+      return;
+    }
+
+    if (!res || !res.ok || !res.data) {
+      if (rankingLoading) rankingLoading.style.display = "none";
+      if (rankingError) rankingError.style.display = "flex";
+      return;
+    }
+
+    // Cache the fresh response for this session
+    rankingCache.set(cacheKey, res.data);
+    renderRankingData(res.data);
+  } catch (err) {
+    if (token !== rankingRequestToken) return;
+    if (rankingLoading) rankingLoading.style.display = "none";
+    if (rankingError) rankingError.style.display = "flex";
+  }
+}
+
+// Title Screen "ランキング" Button
+if (btnOpenRanking) {
+  btnOpenRanking.addEventListener("click", () => {
+    activeRankingPeriod = "MONTHLY";
+    activeRankingDifficulty = "BEGINNER";
+    showScreen("ranking");
+    loadAndDisplayRankings(false);
+  });
+}
+
+// Result Screen "ランキングを見る" Button
+if (btnResultRanking) {
+  btnResultRanking.addEventListener("click", () => {
+    activeRankingPeriod = "MONTHLY";
+    activeRankingDifficulty = (activeSession && activeSession.difficulty) ? activeSession.difficulty : selectedDifficulty;
+    showScreen("ranking");
+    // Result flow: force fresh fetch to guarantee immediately submitted score reflection
+    loadAndDisplayRankings(true);
+  });
+}
+
+// Period Tabs
+if (tabPeriodMonthly) {
+  tabPeriodMonthly.addEventListener("click", () => {
+    if (activeRankingPeriod !== "MONTHLY") {
+      activeRankingPeriod = "MONTHLY";
+      loadAndDisplayRankings(false);
+    }
+  });
+}
+if (tabPeriodAllTime) {
+  tabPeriodAllTime.addEventListener("click", () => {
+    if (activeRankingPeriod !== "ALL_TIME") {
+      activeRankingPeriod = "ALL_TIME";
+      loadAndDisplayRankings(false);
+    }
+  });
+}
+
+// Difficulty Tabs
+if (tabDiffBeginner) {
+  tabDiffBeginner.addEventListener("click", () => {
+    if (activeRankingDifficulty !== "BEGINNER") {
+      activeRankingDifficulty = "BEGINNER";
+      loadAndDisplayRankings(false);
+    }
+  });
+}
+if (tabDiffIntermediate) {
+  tabDiffIntermediate.addEventListener("click", () => {
+    if (activeRankingDifficulty !== "INTERMEDIATE") {
+      activeRankingDifficulty = "INTERMEDIATE";
+      loadAndDisplayRankings(false);
+    }
+  });
+}
+if (tabDiffAdvanced) {
+  tabDiffAdvanced.addEventListener("click", () => {
+    if (activeRankingDifficulty !== "ADVANCED") {
+      activeRankingDifficulty = "ADVANCED";
+      loadAndDisplayRankings(false);
+    }
+  });
+}
+
+// Ranking Retry & Back
+if (btnRankingRetry) {
+  btnRankingRetry.addEventListener("click", () => {
+    loadAndDisplayRankings(true);
+  });
+}
+if (btnRankingBackToTitle) {
+  btnRankingBackToTitle.addEventListener("click", () => {
+    showScreen("title");
+  });
+}
 
 // 9. Developer-Only Test & State Injection Hooks (Section 43 & Phase 5)
 if (typeof window !== "undefined") {

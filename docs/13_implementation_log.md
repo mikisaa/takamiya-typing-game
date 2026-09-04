@@ -337,6 +337,79 @@
 
 ---
 
+## 13. Implementation Phase 9: Monthly / All-Time Ranking Backend & UI (2026-09-04)
+
+### 13.1 実装サマリー
+* **Ranking Core Architecture & Pure Business Logic (`backend/shared/rankingCore.js`)**:
+  * スプレッドシートの全有効スコアから「今月」「歴代」×「初級・中級・上級」のランキングを生成する Pure Logic モジュールを実装。
+  * **6段階決定論的コンパレータ (Best Record Comparator)**:
+    1. `Score` 降順（高スコア優先）
+    2. `Accuracy` 降順（高正答率優先）
+    3. `CorrectCount` 降順（正解数優先）
+    4. `MaxCombo` 降順（最大コンボ優先）
+    5. `PlayedAtServer` 昇順（早期達成優先）
+    6. `ScoreID` 昇順（決定論的文字列比較による同順位タイブレーク確定）
+  * **Leaderboard Anti-Spam & PlayerID Grouping**:
+    * 同一 `(Period × Difficulty × PlayerID)` について、上記コンパレータにより最高記録1件のみを採用。
+    * 同一プレイヤーによるランキング占有を完全防止。
+    * 表記揺れや複数ブラウザからの入力も Phase 8 の `PlayerID` 統合により1件へ集約。
+  * **Authoritative JST Monthly Boundary**:
+    * `Asia/Tokyo` タイムゾーン基準の暦月判定（`yyyy-MM`）をサーバー側で厳格に判定。クライアント時計による月境界判定を完全排除。
+* **Public Data Minimization & Privacy Boundary**:
+  * エンドポイントは anonymous Web App であるため、返却データを公開用最小限に制限。
+  * 原則非返却: `PlayerID`, `PlayerNameKey`, `SubmissionID`, `ScoreID`, クライアントタイムスタンプ, `AppVersion`, スプレッドシートID。
+  * 公開返却: `rank`, `playerName`, `score`, `accuracy`, `correctCount`, `maxCombo`。
+  * 契約記録: `RANKING_PLAYER_NAMES_ARE_VISIBLE_TO_ENDPOINT_CALLERS`。
+* **Google Apps Script Backend (`backend/gas/Rankings.gs`, `Code.gs`)**:
+  * `doGet` ルーターへ `op=getRankings` を追加。
+  * 単一 Range Read (`getDataRange().getValues()`) による一括読み込みで N+1 アクセスを完全防止。
+  * クエリバリデーション（`period`, `difficulty`, `limit`, optional `playerName`）を実装。
+  * 現在プレイヤー解決: クエリ `playerName` から Phase 8 正規化ロジックで `PlayerID` を特定し、TOP 10 外であっても `currentPlayer`（順位・スコア）を返却。
+  * `clasp push -f` および新バージョンデプロイ（Version 9, 実行: 自分, アクセス: 全員）を実施。
+* **Frontend UI & Screen Integration (`src/index.html`, `src/index.css`, `src/main.js`)**:
+  * `src/index.html`:
+    * タイトル画面: 「ランキング」ボタン（`#btnOpenRanking`）を追加。
+    * 本番リザルト画面: 「ランキングを見る」ボタン（`#btnResultRanking`）を追加。
+    * 練習リザルト画面: ランキングボタン非表示（練習モードはランキング対象外）。
+    * 新規画面 `#screenRanking`: 期間タブ（今月・歴代）、難易度タブ（初級・中級・上級）、テーブル表示部、読み込み中、空状態、エラー・再読み込みボタン、TOP 10 外現在プレイヤー情報枠、タイトルへ戻るボタン。
+  * `src/index.css`:
+    * Phase 6 統一パレット（`#FFFFFF`, `#F5FBDA`, `#D9EFBD`, `#B9D175`, `#450C3F`）に厳格準拠。
+    * システム絵文字（🥇, 🥈, 🥉, 🏆, ⭐）を一切排除し、枠線・背景・タイポグラフィで TOP 3 を強調。
+    * 現在プレイヤー行を `#D9EFBD` でハイライト。
+    * 長大プレイヤー名の省略（ellipsis）および 1920×1080〜1280×720 のレスポンシブ対応。
+  * `src/main.js`:
+    * タイトル → ランキング画面遷移。
+    * リザルト → ランキング画面遷移時、プレイした難易度を引き継ぎ、最新保存スコアを確実に反映するため強制最新取得（`forceFresh = true`）。
+    * 高速タブ切り替え時の非同期レスポンス競合防止（`rankingRequestToken` による Stale Response Protection）。
+    * 同一セッション内のインメモリタブキャッシュによる無駄な API リクエスト削減。
+* **Automated Tests**:
+  * 全自動テスト 合計 840 件 PASS（`840 / 840 PASS`、Phase 8 比 +68 件）。
+  * `tests/testRankingCore.js`: JST 月境界判定、6段階コンパレータ、1プレイヤー最高記録集約、期間分離、難易度分離、クロスブラウザ集約、リミット/トータルプレイヤー数、TOP 10 内外現在プレイヤー、公開データ最小化、クエリバリデーション、空DBハンドリング。
+* **Real Cloud Backend HTTP Acceptance Tests (`scripts/testRealGasBackend.js`)**:
+  * 実 Web App エンドポイントに対して 70 件のテストを実施し、全件 PASS（`70 / 70 PASS`）：
+    * `MONTHLY` / `ALL_TIME` ランキング取得。
+    * `BEGINNER`, `INTERMEDIATE`, `ADVANCED` 難易度別集約。
+    * 同一テストプレイヤーへ複数スコア送信時の最高記録単一採用確認。
+    * `currentPlayer` 順位解決確認。
+    * 公開データ最小化（内部 ID 漏洩ゼロ）確認。
+    * 不正パラメータ（`period=YEARLY`, `difficulty=EXPERT`, `limit=0`）の安全な拒絶確認。
+* **Real Browser Verification & Visual Evidence**:
+  * タイトル画面「ランキング」ボタン押下 → ランキング画面表示確認。
+  * 「今月」「歴代」「初級」「中級」「上級」全タブ切り替え・データ描画確認。
+  * 本番モードプレイ → スコア保存完了 →「ランキングを見る」押下 → 最新スコアが即座にランキングへ反映され、現在プレイヤー行が強調表示されることを確認。
+  * 練習モードリザルト画面に「ランキングを見る」ボタンが存在しないことを確認。
+* **Test Data Cleanup**:
+  * スプレッドシート `Scores` シートのテストスコア行を全削除し、ヘッダーのみのクリーンな状態へ復元。
+  * `Players` シートのテスト用プレイヤー行を削除し、ヘッダーおよび `TEST001` のみ保持。
+* **Scope Exclusions Maintained**:
+  * Player 管理画面: `NOT IMPLEMENTED`
+  * PIN / Password / 認証: `NOT IMPLEMENTED`
+  * 年間 / 週間 / 拠点別ランキング: `NOT IMPLEMENTED`
+  * Production Frontend Deployment: `NOT IMPLEMENTED`
+  * AI Development Core: 変更なし
+
+---
+
 
 
 

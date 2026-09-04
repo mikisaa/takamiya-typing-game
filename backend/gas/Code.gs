@@ -23,6 +23,10 @@ function doGet(e) {
       });
     }
 
+    if (op === "getRankings") {
+      return handleGetRankingsOperation(e.parameter || {});
+    }
+
     return createErrorResponse(CONFIG.ERROR_CODES.INVALID_REQUEST, "Unknown GET operation: " + op);
   } catch (err) {
     return createErrorResponse(CONFIG.ERROR_CODES.INTERNAL_ERROR, "Server error processing GET request: " + err.message);

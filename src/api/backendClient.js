@@ -72,4 +72,47 @@ export class BackendClient {
       };
     }
   }
+
+  async getRankings({ period = "MONTHLY", difficulty = "BEGINNER", limit = 10, playerName = null } = {}) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
+
+    const queryParts = [
+      "op=getRankings",
+      `period=${encodeURIComponent(period)}`,
+      `difficulty=${encodeURIComponent(difficulty)}`,
+      `limit=${encodeURIComponent(limit)}`
+    ];
+
+    if (playerName && String(playerName).trim()) {
+      queryParts.push(`playerName=${encodeURIComponent(String(playerName).trim())}`);
+    }
+
+    const url = `${this.endpointUrl}?${queryParts.join("&")}`;
+
+    try {
+      const res = await fetch(url, {
+        method: "GET",
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        return { ok: false, error: { code: "HTTP_ERROR", message: `HTTP status ${res.status}` } };
+      }
+
+      const json = await res.json();
+      return json;
+    } catch (err) {
+      clearTimeout(timeoutId);
+      return {
+        ok: false,
+        error: {
+          code: err.name === "AbortError" ? "TIMEOUT" : "NETWORK_ERROR",
+          message: err.message
+        }
+      };
+    }
+  }
 }
+

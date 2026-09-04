@@ -175,3 +175,88 @@ export function validateSubmitScoreRequest(data) {
     appVersion: data.appVersion ? sanitizeSpreadsheetFormula(String(data.appVersion)) : "1.0.0"
   }};
 }
+
+/**
+ * Validates query parameters for getRankings operation.
+ * @param {Object} query
+ * @returns {{ valid: boolean, code?: string, message?: string, sanitized?: Object }}
+ */
+export function validateGetRankingsQuery(query = {}) {
+  const { ERROR_CODES, ALLOWED_PERIODS, ALLOWED_DIFFICULTIES, LIMITS } = BACKEND_CONFIG;
+
+  if (!query || typeof query !== "object") {
+    return { valid: false, code: ERROR_CODES.INVALID_REQUEST, message: "Query parameters must be an object." };
+  }
+
+  // Period
+  const rawPeriod = query.period ? String(query.period).trim().toUpperCase() : "MONTHLY";
+  if (!ALLOWED_PERIODS.includes(rawPeriod)) {
+    return {
+      valid: false,
+      code: ERROR_CODES.INVALID_PERIOD,
+      message: `Invalid period: ${query.period}. Allowed: ${ALLOWED_PERIODS.join(", ")}.`
+    };
+  }
+
+  // Difficulty
+  const rawDiff = query.difficulty ? String(query.difficulty).trim().toUpperCase() : "BEGINNER";
+  if (!ALLOWED_DIFFICULTIES.includes(rawDiff)) {
+    return {
+      valid: false,
+      code: ERROR_CODES.INVALID_DIFFICULTY,
+      message: `Invalid difficulty: ${query.difficulty}. Allowed: ${ALLOWED_DIFFICULTIES.join(", ")}.`
+    };
+  }
+
+  // Limit (default 10, bounds 1..100)
+  let limit = LIMITS.DEFAULT_RANKING_LIMIT;
+  if (query.limit !== undefined && query.limit !== null && String(query.limit).trim() !== "") {
+    const numLimit = Number(query.limit);
+    if (!Number.isInteger(numLimit) || numLimit < LIMITS.MIN_RANKING_LIMIT || numLimit > LIMITS.MAX_RANKING_LIMIT) {
+      return {
+        valid: false,
+        code: ERROR_CODES.INVALID_LIMIT,
+        message: `Field limit must be an integer between ${LIMITS.MIN_RANKING_LIMIT} and ${LIMITS.MAX_RANKING_LIMIT}.`
+      };
+    }
+    limit = numLimit;
+  }
+
+  // Optional Player Name
+  let playerName = null;
+  let playerNameKey = null;
+  if (query.playerName !== undefined && query.playerName !== null && String(query.playerName).trim() !== "") {
+    if (typeof query.playerName !== "string") {
+      return {
+        valid: false,
+        code: ERROR_CODES.INVALID_PLAYER_NAME,
+        message: "Field playerName must be a string."
+      };
+    }
+
+    const trimmed = query.playerName.trim();
+    const charLen = Array.from(trimmed).length;
+    if (charLen > LIMITS.MAX_PLAYER_NAME_LENGTH) {
+      return {
+        valid: false,
+        code: ERROR_CODES.INVALID_PLAYER_NAME,
+        message: `Player name exceeds maximum length of ${LIMITS.MAX_PLAYER_NAME_LENGTH} characters.`
+      };
+    }
+
+    playerName = sanitizeDisplayName(query.playerName);
+    playerNameKey = normalizePlayerName(query.playerName);
+  }
+
+  return {
+    valid: true,
+    sanitized: {
+      period: rawPeriod,
+      difficulty: rawDiff,
+      limit: limit,
+      playerName: playerName,
+      playerNameKey: playerNameKey
+    }
+  };
+}
+

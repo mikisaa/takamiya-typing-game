@@ -202,6 +202,125 @@ async function runLiveTests() {
   assert(dupCount === 2, `Remaining 2 race submissions returned duplicate=true (got ${dupCount})`);
   assert(raceResults.every((r) => r.data.scoreId === raceResults[0].data.scoreId), "All race submissions returned the identical scoreId");
 
+  // 11. Phase 9 Live Ranking Backend Acceptance
+  console.log("\n--- 11. Phase 9 Live Ranking Backend Acceptance ---");
+  const rankingPlayer = `順位テスト${uniqueSuffix}`;
+  
+  // Submit multiple scores for same player with different values
+  console.log("  Submitting 3 test scores for one player to verify best-score aggregation...");
+  const rankSub1 = await postJson({
+    op: "submitScore",
+    data: {
+      ...validPayloadA.data,
+      submissionId: `TEST-RANK-${uniqueSuffix}-1`,
+      playerName: rankingPlayer,
+      difficulty: "BEGINNER",
+      score: 11000,
+      accuracy: 94.0,
+      correctCount: 15,
+      maxCombo: 8
+    }
+  });
+  assert(rankSub1.ok === true, "First test score submission succeeded");
+
+  const rankSub2 = await postJson({
+    op: "submitScore",
+    data: {
+      ...validPayloadA.data,
+      submissionId: `TEST-RANK-${uniqueSuffix}-2`,
+      playerName: rankingPlayer,
+      difficulty: "BEGINNER",
+      score: 22500, // High score
+      accuracy: 98.5,
+      correctCount: 26,
+      maxCombo: 20
+    }
+  });
+  assert(rankSub2.ok === true, "Second test score submission (best: 22500) succeeded");
+
+  const rankSub3 = await postJson({
+    op: "submitScore",
+    data: {
+      ...validPayloadA.data,
+      submissionId: `TEST-RANK-${uniqueSuffix}-3`,
+      playerName: rankingPlayer,
+      difficulty: "BEGINNER",
+      score: 15000, // Intermediate score
+      accuracy: 96.0,
+      correctCount: 20,
+      maxCombo: 12
+    }
+  });
+  assert(rankSub3.ok === true, "Third test score submission succeeded");
+
+  // Fetch MONTHLY BEGINNER ranking with currentPlayer query
+  console.log("  Querying live getRankings (MONTHLY, BEGINNER)...");
+  const rankMonthlyRes = await getJson({
+    op: "getRankings",
+    period: "MONTHLY",
+    difficulty: "BEGINNER",
+    limit: 10,
+    playerName: rankingPlayer
+  });
+
+  assert(rankMonthlyRes.ok === true, "getRankings returns ok=true");
+  assert(rankMonthlyRes.data.period === "MONTHLY", "Response period is MONTHLY");
+  assert(rankMonthlyRes.data.difficulty === "BEGINNER", "Response difficulty is BEGINNER");
+  assert(Boolean(rankMonthlyRes.data.monthKey), "Response has monthKey (e.g. 2026-09)");
+  assert(rankMonthlyRes.data.timezone === "Asia/Tokyo", "Response timezone is Asia/Tokyo");
+  assert(Array.isArray(rankMonthlyRes.data.entries), "entries is an Array");
+  assert(typeof rankMonthlyRes.data.totalPlayers === "number", "totalPlayers is a number");
+
+  // Verify best-record rule & anti-spam: exactly ONE entry for rankingPlayer with score 22500
+  const playerEntries = rankMonthlyRes.data.entries.filter((e) => e.playerName === rankingPlayer);
+  assert(playerEntries.length === 1, "Player appears exactly ONCE in ranking entries despite 3 submissions");
+  assert(playerEntries[0].score === 22500, `Player's best score (22500) is adopted (got ${playerEntries[0].score})`);
+  assert(playerEntries[0].accuracy === 98.5, "Player's best accuracy is adopted");
+
+  // Verify currentPlayer resolution
+  assert(rankMonthlyRes.data.currentPlayer !== null, "currentPlayer is returned");
+  assert(rankMonthlyRes.data.currentPlayer.playerName === rankingPlayer, "currentPlayer playerName matches");
+  assert(rankMonthlyRes.data.currentPlayer.score === 22500, "currentPlayer score is 22500");
+  assert(typeof rankMonthlyRes.data.currentPlayer.rank === "number", "currentPlayer has numeric rank");
+
+  // Verify data minimization: no internal IDs or timestamps leaked in public ranking
+  const firstEntry = rankMonthlyRes.data.entries[0];
+  assert(firstEntry.playerId === undefined, "playerId is NOT in public ranking entry");
+  assert(firstEntry.submissionId === undefined, "submissionId is NOT in public ranking entry");
+  assert(firstEntry.scoreId === undefined, "scoreId is NOT in public ranking entry");
+  assert(firstEntry.playedAtServer === undefined, "playedAtServer is NOT in public ranking entry");
+  assert(firstEntry.appVersion === undefined, "appVersion is NOT in public ranking entry");
+
+  // Query ALL_TIME BEGINNER
+  console.log("  Querying live getRankings (ALL_TIME, BEGINNER)...");
+  const rankAllTimeRes = await getJson({
+    op: "getRankings",
+    period: "ALL_TIME",
+    difficulty: "BEGINNER",
+    limit: 10
+  });
+  assert(rankAllTimeRes.ok === true, "ALL_TIME getRankings returns ok=true");
+  assert(rankAllTimeRes.data.period === "ALL_TIME", "Response period is ALL_TIME");
+  assert(rankAllTimeRes.data.entries.length >= 1, "ALL_TIME entries contains at least 1 record");
+
+  // Query other difficulties (INTERMEDIATE, ADVANCED)
+  console.log("  Querying live getRankings for INTERMEDIATE and ADVANCED...");
+  const rankIntRes = await getJson({ op: "getRankings", period: "MONTHLY", difficulty: "INTERMEDIATE" });
+  assert(rankIntRes.ok === true, "INTERMEDIATE ranking returns ok=true");
+  const rankAdvRes = await getJson({ op: "getRankings", period: "MONTHLY", difficulty: "ADVANCED" });
+  assert(rankAdvRes.ok === true, "ADVANCED ranking returns ok=true");
+
+  // Query validation rejection
+  console.log("  Verifying server-side query parameter validation rejection...");
+  const invPeriodRes = await getJson({ op: "getRankings", period: "YEARLY" });
+  assert(invPeriodRes.ok === false && invPeriodRes.error.code === "INVALID_PERIOD", "Invalid period YEARLY safely rejected");
+
+  const invDiffRes = await getJson({ op: "getRankings", difficulty: "EXPERT" });
+  assert(invDiffRes.ok === false && invDiffRes.error.code === "INVALID_DIFFICULTY", "Invalid difficulty EXPERT safely rejected");
+
+  const invLimitRes = await getJson({ op: "getRankings", limit: 0 });
+  assert(invLimitRes.ok === false && invLimitRes.error.code === "INVALID_LIMIT", "Limit 0 safely rejected");
+
   console.log("\n==================================================");
   console.log(`LIVE TESTS SUMMARY: ${passed} PASSED, ${failed} FAILED`);
   console.log("==================================================");

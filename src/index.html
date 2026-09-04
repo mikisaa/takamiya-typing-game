@@ -32,6 +32,14 @@
               <span class="btn-desc">時間無制限</span>
             </div>
           </button>
+
+          <button id="btnOpenRanking" class="btn btn-outline btn-large">
+            <span class="btn-icon">順</span>
+            <div class="btn-content">
+              <span class="btn-title">ランキング</span>
+              <span class="btn-desc">今月・歴代の最高記録</span>
+            </div>
+          </button>
         </div>
 
         <div class="version-tag">Version 1.0.0 (Unified Botanical Palette)</div>
@@ -220,7 +228,74 @@
 
         <div class="result-actions">
           <button id="btnResultReplay" class="btn btn-primary btn-large">もう一度プレイ</button>
+          <button id="btnResultRanking" class="btn btn-secondary btn-large" style="display: none;">ランキングを見る</button>
           <button id="btnResultTitle" class="btn btn-outline btn-large">タイトルへ戻る</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. RANKING SCREEN -->
+    <section id="screenRanking" class="screen">
+      <div class="card ranking-card">
+        <div class="brand-badge">HIGH SCORES</div>
+        <h2 class="ranking-title">ランキング</h2>
+
+        <!-- Period Filter Tabs -->
+        <div class="ranking-filter-group" role="tablist" aria-label="期間選択">
+          <button id="tabPeriodMonthly" class="btn-filter active" role="tab" aria-selected="true">今月</button>
+          <button id="tabPeriodAllTime" class="btn-filter" role="tab" aria-selected="false">歴代</button>
+        </div>
+
+        <!-- Difficulty Filter Tabs -->
+        <div class="ranking-filter-group diff-filters" role="tablist" aria-label="難易度選択">
+          <button id="tabDiffBeginner" class="btn-filter active" role="tab" aria-selected="true">初級</button>
+          <button id="tabDiffIntermediate" class="btn-filter" role="tab" aria-selected="false">中級</button>
+          <button id="tabDiffAdvanced" class="btn-filter" role="tab" aria-selected="false">上級</button>
+        </div>
+
+        <!-- Status / Feedback Container -->
+        <div id="rankingStatusContainer" class="ranking-status-container">
+          <div id="rankingLoading" class="ranking-status-msg" style="display: none;">ランキングを読み込み中...</div>
+          <div id="rankingEmpty" class="ranking-status-msg" style="display: none;">今月の記録はまだありません</div>
+          <div id="rankingError" class="ranking-error-box" style="display: none;">
+            <span class="ranking-error-msg">ランキングを取得できませんでした</span>
+            <button id="btnRankingRetry" class="btn btn-secondary btn-small">再読み込み</button>
+          </div>
+        </div>
+
+        <!-- Ranking Table Viewport -->
+        <div id="rankingTableContainer" class="ranking-table-container">
+          <table class="ranking-table">
+            <thead>
+              <tr>
+                <th class="col-rank">順位</th>
+                <th class="col-player">プレイヤー</th>
+                <th class="col-score">スコア</th>
+                <th class="col-accuracy">正答率</th>
+                <th class="col-combo">MAX COMBO</th>
+              </tr>
+            </thead>
+            <tbody id="rankingTableBody">
+              <!-- Dynamically populated rows -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Current Player Outside Top 10 Box -->
+        <div id="rankingCurrentPlayerBox" class="ranking-current-player-box" style="display: none;">
+          <div class="current-player-badge">現在のプレイヤー</div>
+          <div class="current-player-row">
+            <span id="cpRank" class="cp-rank">18位</span>
+            <span id="cpName" class="cp-name">高宮 太郎</span>
+            <span id="cpScore" class="cp-score">9,420</span>
+            <span id="cpAccuracy" class="cp-stat">正答率 97.8%</span>
+            <span id="cpCombo" class="cp-stat">MAX 16</span>
+          </div>
+        </div>
+
+        <!-- Ranking Footer Action -->
+        <div class="ranking-actions">
+          <button id="btnRankingBackToTitle" class="btn btn-outline btn-large">タイトルへ戻る</button>
         </div>
       </div>
     </section>

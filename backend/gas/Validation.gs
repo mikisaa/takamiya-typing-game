@@ -149,3 +149,84 @@ function validateScoreSubmissionPayload(data) {
     }
   };
 }
+
+function validateGetRankingsQuery(params) {
+  var limits = CONFIG.LIMITS;
+  var codes = CONFIG.ERROR_CODES;
+
+  if (!params || typeof params !== "object") {
+    return { valid: false, code: codes.INVALID_REQUEST, message: "Query parameters must be an object." };
+  }
+
+  // Period
+  var rawPeriod = params.period ? String(params.period).trim().toUpperCase() : "MONTHLY";
+  if (CONFIG.ALLOWED_PERIODS.indexOf(rawPeriod) === -1) {
+    return {
+      valid: false,
+      code: codes.INVALID_PERIOD,
+      message: "Invalid period: " + params.period + ". Allowed: " + CONFIG.ALLOWED_PERIODS.join(", ") + "."
+    };
+  }
+
+  // Difficulty
+  var rawDiff = params.difficulty ? String(params.difficulty).trim().toUpperCase() : "BEGINNER";
+  if (CONFIG.ALLOWED_DIFFICULTIES.indexOf(rawDiff) === -1) {
+    return {
+      valid: false,
+      code: codes.INVALID_DIFFICULTY,
+      message: "Invalid difficulty: " + params.difficulty + ". Allowed: " + CONFIG.ALLOWED_DIFFICULTIES.join(", ") + "."
+    };
+  }
+
+  // Limit (default 10, bounds 1..100)
+  var limit = limits.DEFAULT_RANKING_LIMIT;
+  if (params.limit !== undefined && params.limit !== null && String(params.limit).trim() !== "") {
+    var numLimit = Number(params.limit);
+    if (isNaN(numLimit) || Math.floor(numLimit) !== numLimit || numLimit < limits.MIN_RANKING_LIMIT || numLimit > limits.MAX_RANKING_LIMIT) {
+      return {
+        valid: false,
+        code: codes.INVALID_LIMIT,
+        message: "Field limit must be an integer between " + limits.MIN_RANKING_LIMIT + " and " + limits.MAX_RANKING_LIMIT + "."
+      };
+    }
+    limit = numLimit;
+  }
+
+  // Optional Player Name
+  var playerName = null;
+  var playerNameKey = null;
+  if (params.playerName !== undefined && params.playerName !== null && String(params.playerName).trim() !== "") {
+    if (typeof params.playerName !== "string") {
+      return {
+        valid: false,
+        code: codes.INVALID_PLAYER_NAME,
+        message: "Field playerName must be a string."
+      };
+    }
+
+    var trimmed = params.playerName.trim();
+    var charLen = Array.from(trimmed).length;
+    if (charLen > limits.MAX_PLAYER_NAME_LENGTH) {
+      return {
+        valid: false,
+        code: codes.INVALID_PLAYER_NAME,
+        message: "Player name exceeds maximum length of " + limits.MAX_PLAYER_NAME_LENGTH + " characters."
+      };
+    }
+
+    playerName = sanitizeDisplayName(params.playerName);
+    playerNameKey = normalizePlayerName(params.playerName);
+  }
+
+  return {
+    valid: true,
+    sanitized: {
+      period: rawPeriod,
+      difficulty: rawDiff,
+      limit: limit,
+      playerName: playerName,
+      playerNameKey: playerNameKey
+    }
+  };
+}
+
