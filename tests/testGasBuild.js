@@ -34,7 +34,7 @@ export function runGasBuildTests() {
   assert(bundleContent.startsWith("<script>"), "ClientBundle.html starts with <script>");
   assert(bundleContent.trimEnd().endsWith("</script>"), "ClientBundle.html ends with </script>");
   assert(!bundleContent.includes("import ") || !bundleContent.split("\n").some((l) => l.trim().startsWith("import ")), "Zero unresolved top-level import statements in bundle");
-  assert(bundleContent.includes("1.1.0"), "Client bundle contains version 1.1.0");
+  assert(bundleContent.includes("1.2.0"), "Client bundle contains version 1.2.0");
   assert(bundleContent.includes("TAKAMIYA TYPING GAME"), "Client bundle contains TAKAMIYA TYPING GAME");
   assert(bundleContent.includes("ttg.lastPlayerName.v1"), "Client bundle contains ttg.lastPlayerName.v1");
   // Check 180 questions are included in the bundle

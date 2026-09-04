@@ -393,7 +393,8 @@ function renderResultScreen() {
   metricCorrect.textContent = `${summary.correctCount} 問`;
   metricMiss.textContent = `${summary.missCount} 回`;
   metricMistakes.textContent = `${summary.typingMistakeCount} 回`;
-  metricChars.textContent = `${summary.totalKeystrokes || (summary.correctKeystrokes + summary.typingMistakeCount)} 文字`;
+  const typedCount = summary.typedCharacterCount ?? summary.typedCharacters ?? (typeof summary.accuracy === "object" ? summary.accuracy.typed : 0) ?? 0;
+  metricChars.textContent = `${typedCount} 文字`;
   const accVal = summary.accuracyPercent ?? (typeof summary.accuracy === "object" ? summary.accuracy.percent : summary.accuracy);
   metricAccuracy.textContent = `${Number(accVal || 100).toFixed(1)}%`;
   metricMaxCombo.textContent = `${summary.maxCombo} COMBO`;
@@ -432,7 +433,7 @@ async function submitProductionScore(summary) {
     reachedStage: summary.backgroundStage?.id || "GROUND",
     startedAt: summary.startedAt ? summary.startedAt.toISOString() : new Date().toISOString(),
     finishedAt: summary.finishedAt ? summary.finishedAt.toISOString() : new Date().toISOString(),
-    appVersion: "1.1.0"
+    appVersion: "1.2.0"
   };
 
   try {

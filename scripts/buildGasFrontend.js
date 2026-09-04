@@ -56,11 +56,11 @@ export function buildGasFrontend() {
     }
   }
 
-  if (!bundledJs.includes("1.1.0")) {
-    throw new Error("Bundle is missing version 1.1.0 marker");
+  if (!bundledJs.includes("1.2.0")) {
+    throw new Error("Bundle is missing version 1.2.0 marker");
   }
 
-  const clientBundleHtml = `<script>\n/* TAKAMIYA TYPING GAME v1.1.0 — Deterministic Client Bundle */\n${bundledJs}\n</script>\n`;
+  const clientBundleHtml = `<script>\n/* TAKAMIYA TYPING GAME v1.2.0 — Deterministic Client Bundle */\n${bundledJs}\n</script>\n`;
   const clientBundlePath = path.resolve(gasDir, "ClientBundle.html");
   fs.writeFileSync(clientBundlePath, clientBundleHtml, "utf-8");
   console.log(`  -> Generated ClientBundle.html (${(clientBundleHtml.length / 1024).toFixed(1)} KB)`);
@@ -69,7 +69,7 @@ export function buildGasFrontend() {
   console.log("\n[2/3] Inlining CSS stylesheet...");
   const cssPath = path.resolve(srcDir, "index.css");
   const rawCss = fs.readFileSync(cssPath, "utf-8");
-  const stylesheetHtml = `<style>\n/* TAKAMIYA TYPING GAME v1.1.0 — Unified 5-Color Palette Stylesheet */\n${rawCss}\n</style>\n`;
+  const stylesheetHtml = `<style>\n/* TAKAMIYA TYPING GAME v1.2.0 — Unified UI & Realistic Scene Stylesheet */\n${rawCss}\n</style>\n`;
   const stylesheetPath = path.resolve(gasDir, "Stylesheet.html");
   fs.writeFileSync(stylesheetPath, stylesheetHtml, "utf-8");
   console.log(`  -> Generated Stylesheet.html (${(stylesheetHtml.length / 1024).toFixed(1)} KB)`);

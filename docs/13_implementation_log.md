@@ -588,3 +588,56 @@
   * 新規追加テスト: 67 テスト（`tests/testRebrandAndSvg.js`, `tests/testGasBuild.js`）
   * 合計: **907 / 907 PASS** (0 failed)
   * 実稼働 GAS エンドポイント回帰テスト: **70 / 70 PASS** (0 failed)
+
+---
+
+## 2026-09-05: Phase 13 — Result Metric Fix, Recognizable Icon System, Copy Cleanup & Realistic Gameplay Colors (v1.2.0)
+
+* **Phase 目的**:
+  1. 本番リザルト画面の「入力文字数」が `NaN文字` になる不具合の根本解消。
+  2. インラインSVGアイコンを一般UIアイコン（トラック、キーボード、表彰台、check-circle、x-circle等）と同程度に一目で意味が伝わる明瞭なベクターアイコンへ変更。
+  3. タイトル画面の文言整理（サブタイトル削除、ランキング説明文を `今月・歴代` に変更）。
+  4. ゲーム画面（フォークリフト・資材・トラック・背景・EXTRA）の5色カラーパレット制約を解除し、実物・現実に近い自然な色（Realistic Colors）へ刷新。
+* **Root Cause & Fix — Production Result `NaN文字`**:
+  * **根本原因**: `GameSession.getSummary()` において `typedCharacterCount: this.typedCharacterCount` は返されていたが、`totalKeystrokes` および `correctKeystrokes` が定義されていなかった。一方、`src/main.js:396` では `metricChars.textContent = `${summary.totalKeystrokes || (summary.correctKeystrokes + summary.typingMistakeCount)} 文字`` と計算しており、`undefined + summary.typingMistakeCount` の演算によって `NaN` 文字列が発生していた。
+  * **修正内容**:
+    * `src/engine/gameSession.js`: `getSummary()` に明示的に `typedCharacterCount`, `typedCharacters: this.typedCharacterCount`, `totalKeystrokes: this.typedCharacterCount + this.typingMistakeCount`, `correctKeystrokes: this.typedCharacterCount` を定義。
+    * `src/main.js`: `summary.typedCharacterCount ?? summary.typedCharacters ?? 0` を使用し、常に有限非負整数（0文字入力時も `0 文字`）が表示されるよう一元化。
+    * `submitProductionScore` のペイロード `typedCharacters` とリザルト表示指標の Single Source of Truth（同一値）を保証。
+* **Recognizable UI Vector Icons System**:
+  * `src/visual/pixel/uiIconsSvg.js` を刷新。ピクセルアートに拘泥せず、Lucide / Material Icons 等の一般的なUIベクターアイコンと同等の高い視認性・意味伝達性を実現。
+  * 本番モード: 配送用トラックのクリーンなシルエット（荷台、運転席、車輪）。
+  * 練習モード: 角丸ボディにキー配列とスペースバーを備えた明確なキーボード。
+  * ランキング: 1位に星を配した表彰台（ポディウム）。
+  * ステージ: 街並み・オフィスビル。
+  * SUCCESS: 一目で成功とわかる `check-circle`（円形＋チェックマーク）。
+  * MISS: 一目で失敗とわかる `x-circle`（円形＋バツマーク）。
+  * リザルト指標: スピードメーター（SCORE）、ブルズアイ（ACCURACY）、炎（COMBO）、ビル（STAGE）。
+  * UIアイコンはすべて TTG Botanical 5色パレット（`#FFFFFF`, `#F5FBDA`, `#D9EFBD`, `#B9D175`, `#450C3F`）に厳密準拠。Reactや外部フォント依存ゼロ、OS絵文字ゼロ。
+* **Title Screen Copy Cleanup**:
+  * `src/index.html`: 旧サブタイトル `<p class="subtitle">仮設足場資材の積込作業をテーマにした爽快タイピングゲーム</p>` を完全削除。
+  * `src/index.css`: `.main-title` のマージン（`margin-bottom: 1.75rem`）を調整し、タイトルとボタン間の自然な余白を確保。
+  * ランキングボタン説明文を完全一致で `今月・歴代` に更新（旧: `今月・歴代の最高記録`）。
+  * バージョン表記を `Version 1.2.0 (TTG Realistic Edition)` に更新。
+* **Gameplay Scene Realistic Colors Contract**:
+  * `src/visual/pixel/scenePalette.js` を新設し、ゲーム世界専用の意味ベースカラー定数を集約。
+  * フォークリフト: インダストリアルイエロー（`#F59E0B`, `#FDE047`, `#D97706`）、ダークスチールマスト・キャビン（`#334155`, `#1E293B`）、ダークスチールフォーク（`#475569`）。
+  * 仮設足場資材: 亜鉛メッキ鋼管スチールグレー（`#94A3B8`, `#CBD5E1`, `#E2E8F0`, `#F8FAFC`）、木製パレット（`#D97706`, `#78350F`）、PPバンド（`#1E3A8A`）。
+  * トラック: 実車らしいホワイトキャブ（`#F8FAFC`, `#CBD5E1`）、ダークシャーシ（`#1E293B`）、スチール荷台（`#64748B`）、安全色レッドのユニッククレーン（`#DC2626`）。
+  * タイヤ: ダークラバー（`#0F172A`, `#1E293B`）。
+  * 背景・空: 白一色の空から自然なスカイブルーグラデーション（`#BAE6FD` ➔ `#E0F2FE` ➔ `#F0F9FF`）へ変更。
+  * 地面: 資材ヤードに相応しいコンクリート・アスファルトグレー（`#94A3B8`, `#475569`）および白色車線ストライプ（`#F8FAFC`）。
+  * 建造物: 多彩な外壁色（ベージュ `#FEF3C7`, テラコッタ `#991B1B`, スレート `#CBD5E1`, ガラスブルー `#0284C7`, `#38BDF8`）。
+  * ランドマーク: 東京タワーを赤白（`#DC2626`, `#FFFFFF`）、スカイツリーをシルバー・淡色スチール（`#F1F5F9`, `#94A3B8`, `#0284C7`）へ変更。
+  * EXTRA: `rainbowSvg.js` にて本物の7色スペクトル虹（赤・橙・黄・緑・シアン・青・紫）を描画。
+  * **パレット分離**: UI（`UI_PALETTE` = Botanical 5色）と Gameplay World（`SCENE_PALETTE` = Realistic Colors）を明確に分離し、UIの色彩ドリフトを防止。
+* **Automated Tests**:
+  * ベースライン: 907 テスト
+  * 新規追加・更新テスト: 75 テスト（NaN回帰、アイコン識別性、コピー、現実色パレット等）
+  * 合計: **982 / 982 PASS** (0 failed)
+  * 実稼働 GAS エンドポイント結合テスト: **70 / 70 PASS** (0 failed)
+* **Production Deployment**:
+  * Authoritative GAS Deployment ID: `AKfycbzdPNsWV5kNdtpsF91jkca3lkJSLdVxG_2Ux8V5a5f1kMWLJmogiUG8mzbSiRk3S3xeeQ`
+  * Version: `@13 (TakamiyaTypingGame v1.2.0)`
+  * URL 不変（利用者への再配布不要）。
+

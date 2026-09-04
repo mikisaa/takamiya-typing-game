@@ -33,9 +33,9 @@ export function runVisualAssetsTests() {
     }
   }
 
-  // 1. Palette check (Phase 6 Unified Palette)
-  assert(PALETTE.FORK_BODY_MAIN === "#B9D175", "Palette contains FORK_BODY_MAIN (#B9D175)");
-  assert(PALETTE.OUTLINE_DARK === "#450C3F", "Palette contains OUTLINE_DARK (#450C3F)");
+  // 1. Palette check (Realistic Gameplay Scene Palette)
+  assert(PALETTE.FORK_BODY_MAIN === "#F59E0B", "Palette contains FORK_BODY_MAIN (#F59E0B)");
+  assert(PALETTE.OUTLINE_DARK === "#1E293B", "Palette contains OUTLINE_DARK (#1E293B)");
 
   // 2. Forklift SVG Sprite
   const forkliftSvg = getForkliftSvg({ wheelFrame: 0, forkLiftY: 0 });

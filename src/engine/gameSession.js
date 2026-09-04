@@ -342,6 +342,9 @@ export class GameSession {
       missCount: this.missCount,
       typingMistakeCount: this.typingMistakeCount,
       typedCharacterCount: this.typedCharacterCount,
+      typedCharacters: this.typedCharacterCount,
+      totalKeystrokes: this.typedCharacterCount + this.typingMistakeCount,
+      correctKeystrokes: this.typedCharacterCount,
       maxCombo: this.maxCombo,
       truckLoadStage: this.truckLoadStage,
       accuracy: {

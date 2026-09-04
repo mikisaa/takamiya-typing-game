@@ -124,17 +124,8 @@ body {
   font-weight: 900;
   letter-spacing: 0.06em;
   color: var(--dark);
-  margin-bottom: 0.75rem;
+  margin-bottom: 1.75rem;
   font-family: var(--font-mono);
-}
-
-.subtitle {
-  font-size: 1rem;
-  color: var(--text);
-  max-width: 580px;
-  margin-bottom: 2.25rem;
-  line-height: 1.6;
-  font-weight: 600;
 }
 
 .menu-actions {
@@ -526,14 +517,14 @@ body {
   overflow: hidden;
 }
 
-/* 1. Sky Layer (Clean White Sky) */
+/* 1. Sky Layer (Realistic Sky Blue) */
 .scene-sky-layer {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 125px;
-  background: var(--white);
+  background: linear-gradient(180deg, #BAE6FD 0%, #E0F2FE 75%, #F0F9FF 100%);
   z-index: 1;
 }
 
@@ -596,12 +587,12 @@ body {
   height: 10px;
   background: repeating-linear-gradient(
     90deg,
-    var(--dark) 0px,
-    var(--dark) 2px,
+    #64748B 0px,
+    #64748B 2px,
     transparent 2px,
     transparent 12px
   );
-  border-bottom: 2px solid var(--dark);
+  border-bottom: 2px solid #475569;
   z-index: 3;
 }
 
@@ -612,8 +603,8 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--pale-1);
-  border-top: 3px solid var(--dark);
+  background: #94A3B8;
+  border-top: 3px solid #334155;
   z-index: 4;
 }
 
@@ -625,8 +616,8 @@ body {
   height: 3px;
   background: repeating-linear-gradient(
     90deg,
-    var(--pale-2) 0px,
-    var(--pale-2) 20px,
+    #F8FAFC 0px,
+    #F8FAFC 20px,
     transparent 20px,
     transparent 40px
   );

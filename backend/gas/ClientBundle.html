@@ -1,5 +1,5 @@
 <script>
-/* TAKAMIYA TYPING GAME v1.1.0 — Deterministic Client Bundle */
+/* TAKAMIYA TYPING GAME v1.2.0 — Deterministic Client Bundle */
 (() => {
   // src/engine/gameState.js
   var GAME_STATES = {
@@ -1000,6 +1000,9 @@
         missCount: this.missCount,
         typingMistakeCount: this.typingMistakeCount,
         typedCharacterCount: this.typedCharacterCount,
+        typedCharacters: this.typedCharacterCount,
+        totalKeystrokes: this.typedCharacterCount + this.typingMistakeCount,
+        correctKeystrokes: this.typedCharacterCount,
         maxCombo: this.maxCombo,
         truckLoadStage: this.truckLoadStage,
         accuracy: {
@@ -3184,6 +3187,98 @@
     }
   ];
 
+  // src/visual/pixel/scenePalette.js
+  var SCENE_PALETTE = {
+    // Outlines, Shadows & Structural Charcoal
+    OUTLINE_DARK: "#1E293B",
+    OUTLINE_MED: "#334155",
+    SHADOW: "rgba(15, 23, 42, 0.35)",
+    // Forklift (Realistic Industrial Yellow / Orange & Dark Steel)
+    FORK_BODY_LIGHT: "#FDE047",
+    FORK_BODY_MAIN: "#F59E0B",
+    FORK_BODY_DARK: "#D97706",
+    FORK_CABIN: "#334155",
+    FORK_SEAT: "#1E293B",
+    FORK_MAST: "#334155",
+    FORK_FORKS: "#475569",
+    // Wheels, Tires & Hardware (Realistic Rubber & Metallic Rims)
+    TIRE_BLACK: "#0F172A",
+    TIRE_DARK: "#1E293B",
+    RIM_LIGHT: "#E2E8F0",
+    RIM_DARK: "#64748B",
+    // Scaffold Materials & Steel (Galvanized Steel / Metallic Grays)
+    STEEL_HIGHLIGHT: "#F8FAFC",
+    STEEL_LIGHT: "#E2E8F0",
+    STEEL_MAIN: "#94A3B8",
+    STEEL_DARK: "#64748B",
+    STEEL_BLUE: "#475569",
+    WOOD_PALLET: "#D97706",
+    WOOD_DARK: "#78350F",
+    BAND_STRAP: "#1E3A8A",
+    // Trucks (Realistic Commercial White Cabs, Cranes & Chassis)
+    TRUCK_CAB_WHITE: "#F8FAFC",
+    TRUCK_CAB_SHADOW: "#CBD5E1",
+    TRUCK_CHASSIS: "#1E293B",
+    TRUCK_BED: "#64748B",
+    CRANE_BLUE: "#2563EB",
+    CRANE_RED: "#DC2626",
+    CRANE_ORANGE: "#EA580C",
+    GLASS_BLUE: "#38BDF8",
+    GLASS_TINT: "#BAE6FD",
+    // Effects (Visual Sparks & Hits)
+    SPARK_YELLOW: "#FACC15",
+    SPARK_WHITE: "#FFFFFF",
+    BURST_ORANGE: "#F97316",
+    MISS_RED: "#DC2626",
+    // Construction & Background Ground (Asphalt & Concrete Yard)
+    CONCRETE_LIGHT: "#E2E8F0",
+    CONCRETE_MAIN: "#94A3B8",
+    CONCRETE_DARK: "#475569",
+    WOOD_FRAME: "#B45309",
+    // Container Facility (Industrial Teal/Blue & Shadow)
+    CONTAINER_TEAL: "#0284C7",
+    CONTAINER_DARK: "#0F172A",
+    CONTAINER_BLUE: "#2563EB",
+    CONTAINER_RED: "#DC2626",
+    CONTAINER_GREEN: "#16A34A",
+    // Residential House (Warm Beige Walls & Terracotta Roof)
+    HOUSE_WALL: "#FEF3C7",
+    HOUSE_ROOF: "#991B1B",
+    HOUSE_DOOR: "#78350F",
+    // Mid-Rise Office Building (Realistic Slate / Concrete & Glass)
+    BUILDING_WALL: "#CBD5E1",
+    BUILDING_WINDOW: "#38BDF8",
+    BUILDING_DARK: "#334155",
+    // Highrise Skyscraper (Modern Commercial Blue Glass)
+    HIGHRISE_GLASS: "#0284C7",
+    HIGHRISE_DARK: "#1E293B",
+    HIGHRISE_ACCENT: "#38BDF8",
+    // Tokyo Tower (Realistic International Orange/Red & White)
+    TOWER_RED: "#DC2626",
+    TOWER_WHITE: "#FFFFFF",
+    TOWER_LIGHT: "#F59E0B",
+    // Skytree (Silver / Pale Steel & Illumination Cyan)
+    SKYTREE_WHITE: "#F1F5F9",
+    SKYTREE_STEEL: "#94A3B8",
+    SKYTREE_CYAN: "#0284C7",
+    // Atmosphere, Sky & Vegetation
+    SKY_BLUE: "#BAE6FD",
+    SKY_BLUE_LIGHT: "#E0F2FE",
+    VEGETATION_GREEN: "#16A34A",
+    VEGETATION_LIGHT: "#22C55E",
+    VEGETATION_DARK: "#15803D",
+    // Authentic 7-Color Rainbow
+    RAINBOW: {
+      RED: "#EF4444",
+      ORANGE: "#F97316",
+      YELLOW: "#FACC15",
+      GREEN: "#22C55E",
+      CYAN: "#06B6D4",
+      BLUE: "#3B82F6",
+      VIOLET: "#8B5CF6"
+    }
+  };
+
   // src/visual/pixel/palette.js
   var AUTHORITATIVE_PALETTE = {
     WHITE: "#FFFFFF",
@@ -3192,81 +3287,18 @@
     ACCENT: "#B9D175",
     DARK: "#450C3F"
   };
+  var UI_PALETTE = {
+    ...AUTHORITATIVE_PALETTE
+  };
   var PALETTE = {
-    // 5 Core Tokens
+    // Core Botanical Tokens (for UI fallback & reference)
     WHITE: AUTHORITATIVE_PALETTE.WHITE,
     PALE_1: AUTHORITATIVE_PALETTE.PALE_1,
     PALE_2: AUTHORITATIVE_PALETTE.PALE_2,
     ACCENT: AUTHORITATIVE_PALETTE.ACCENT,
     DARK: AUTHORITATIVE_PALETTE.DARK,
-    // Outlines, Shadows & Structural Dark
-    OUTLINE_DARK: AUTHORITATIVE_PALETTE.DARK,
-    OUTLINE_MED: AUTHORITATIVE_PALETTE.DARK,
-    SHADOW: "rgba(69, 12, 63, 0.25)",
-    // Forklift (Recolored with ACCENT, PALE_2, DARK, PALE_1)
-    FORK_BODY_LIGHT: AUTHORITATIVE_PALETTE.PALE_2,
-    FORK_BODY_MAIN: AUTHORITATIVE_PALETTE.ACCENT,
-    FORK_BODY_DARK: AUTHORITATIVE_PALETTE.DARK,
-    FORK_CABIN: AUTHORITATIVE_PALETTE.DARK,
-    FORK_SEAT: AUTHORITATIVE_PALETTE.DARK,
-    FORK_MAST: AUTHORITATIVE_PALETTE.DARK,
-    FORK_FORKS: AUTHORITATIVE_PALETTE.DARK,
-    // Wheels & Hardware
-    TIRE_BLACK: AUTHORITATIVE_PALETTE.DARK,
-    TIRE_DARK: AUTHORITATIVE_PALETTE.DARK,
-    RIM_LIGHT: AUTHORITATIVE_PALETTE.PALE_1,
-    RIM_DARK: AUTHORITATIVE_PALETTE.ACCENT,
-    // Scaffold Materials & Steel
-    STEEL_HIGHLIGHT: AUTHORITATIVE_PALETTE.PALE_1,
-    STEEL_LIGHT: AUTHORITATIVE_PALETTE.PALE_2,
-    STEEL_MAIN: AUTHORITATIVE_PALETTE.ACCENT,
-    STEEL_DARK: AUTHORITATIVE_PALETTE.DARK,
-    STEEL_BLUE: AUTHORITATIVE_PALETTE.ACCENT,
-    WOOD_PALLET: AUTHORITATIVE_PALETTE.PALE_2,
-    WOOD_DARK: AUTHORITATIVE_PALETTE.DARK,
-    BAND_STRAP: AUTHORITATIVE_PALETTE.DARK,
-    // Trucks (3 difficulty models)
-    TRUCK_CAB_WHITE: AUTHORITATIVE_PALETTE.PALE_1,
-    TRUCK_CAB_SHADOW: AUTHORITATIVE_PALETTE.PALE_2,
-    TRUCK_CHASSIS: AUTHORITATIVE_PALETTE.DARK,
-    TRUCK_BED: AUTHORITATIVE_PALETTE.ACCENT,
-    CRANE_BLUE: AUTHORITATIVE_PALETTE.ACCENT,
-    CRANE_ORANGE: AUTHORITATIVE_PALETTE.DARK,
-    GLASS_BLUE: AUTHORITATIVE_PALETTE.PALE_2,
-    GLASS_TINT: AUTHORITATIVE_PALETTE.PALE_1,
-    // Effects
-    SPARK_YELLOW: AUTHORITATIVE_PALETTE.PALE_1,
-    SPARK_WHITE: AUTHORITATIVE_PALETTE.WHITE,
-    BURST_ORANGE: AUTHORITATIVE_PALETTE.ACCENT,
-    MISS_RED: AUTHORITATIVE_PALETTE.DARK,
-    // Construction & Background Ground
-    CONCRETE_LIGHT: AUTHORITATIVE_PALETTE.PALE_1,
-    CONCRETE_MAIN: AUTHORITATIVE_PALETTE.PALE_2,
-    CONCRETE_DARK: AUTHORITATIVE_PALETTE.DARK,
-    WOOD_FRAME: AUTHORITATIVE_PALETTE.DARK,
-    // Container Facility
-    CONTAINER_TEAL: AUTHORITATIVE_PALETTE.ACCENT,
-    CONTAINER_DARK: AUTHORITATIVE_PALETTE.DARK,
-    // House
-    HOUSE_WALL: AUTHORITATIVE_PALETTE.PALE_1,
-    HOUSE_ROOF: AUTHORITATIVE_PALETTE.ACCENT,
-    HOUSE_DOOR: AUTHORITATIVE_PALETTE.DARK,
-    // Mid-Rise Office Building
-    BUILDING_WALL: AUTHORITATIVE_PALETTE.PALE_2,
-    BUILDING_WINDOW: AUTHORITATIVE_PALETTE.PALE_1,
-    BUILDING_DARK: AUTHORITATIVE_PALETTE.DARK,
-    // Highrise Skyscraper
-    HIGHRISE_GLASS: AUTHORITATIVE_PALETTE.ACCENT,
-    HIGHRISE_DARK: AUTHORITATIVE_PALETTE.DARK,
-    HIGHRISE_ACCENT: AUTHORITATIVE_PALETTE.PALE_2,
-    // Tokyo Tower
-    TOWER_RED: AUTHORITATIVE_PALETTE.DARK,
-    TOWER_WHITE: AUTHORITATIVE_PALETTE.PALE_1,
-    TOWER_LIGHT: AUTHORITATIVE_PALETTE.ACCENT,
-    // Skytree
-    SKYTREE_WHITE: AUTHORITATIVE_PALETTE.PALE_1,
-    SKYTREE_STEEL: AUTHORITATIVE_PALETTE.ACCENT,
-    SKYTREE_CYAN: AUTHORITATIVE_PALETTE.PALE_2
+    // Realistic Gameplay Scene Tokens
+    ...SCENE_PALETTE
   };
 
   // src/visual/pixel/forkliftSvg.js
@@ -4741,17 +4773,14 @@
       </defs>
 
       <g mask="url(#rainbowFade)">
-        <!-- Botanical Palette Arcs (Center at x=450, y=140) -->
-        <!-- Band 1: DARK Plum Outermost Band -->
-        <circle cx="450" cy="140" r="132" fill="none" stroke="${PALETTE.DARK}" stroke-width="4" opacity="0.4" />
-        <!-- Band 2: ACCENT Green Band -->
-        <circle cx="450" cy="140" r="128" fill="none" stroke="${PALETTE.ACCENT}" stroke-width="4" opacity="0.65" />
-        <!-- Band 3: PALE_2 Soft Green Band -->
-        <circle cx="450" cy="140" r="124" fill="none" stroke="${PALETTE.PALE_2}" stroke-width="4" opacity="0.75" />
-        <!-- Band 4: PALE_1 Cream Band -->
-        <circle cx="450" cy="140" r="120" fill="none" stroke="${PALETTE.PALE_1}" stroke-width="4" opacity="0.85" />
-        <!-- Band 5: Innermost Accent Stroke -->
-        <circle cx="450" cy="140" r="116" fill="none" stroke="${PALETTE.ACCENT}" stroke-width="3" opacity="0.5" />
+        <!-- Authentic 7-Color Spectral Arcs (Center at x=450, y=140) -->
+        <circle cx="450" cy="140" r="132" fill="none" stroke="${PALETTE.RAINBOW.RED}" stroke-width="3" opacity="0.8" />
+        <circle cx="450" cy="140" r="129" fill="none" stroke="${PALETTE.RAINBOW.ORANGE}" stroke-width="3" opacity="0.8" />
+        <circle cx="450" cy="140" r="126" fill="none" stroke="${PALETTE.RAINBOW.YELLOW}" stroke-width="3" opacity="0.8" />
+        <circle cx="450" cy="140" r="123" fill="none" stroke="${PALETTE.RAINBOW.GREEN}" stroke-width="3" opacity="0.8" />
+        <circle cx="450" cy="140" r="120" fill="none" stroke="${PALETTE.RAINBOW.CYAN}" stroke-width="3" opacity="0.8" />
+        <circle cx="450" cy="140" r="117" fill="none" stroke="${PALETTE.RAINBOW.BLUE}" stroke-width="3" opacity="0.8" />
+        <circle cx="450" cy="140" r="114" fill="none" stroke="${PALETTE.RAINBOW.VIOLET}" stroke-width="3" opacity="0.8" />
       </g>
     </svg>
   `;
@@ -5471,122 +5500,38 @@
 
   // src/visual/pixel/uiIconsSvg.js
   function getStageIconSvg(stageId = "GROUND") {
-    const sid = String(stageId).toUpperCase();
-    switch (sid) {
-      case "CONTAINER":
-        return `
-        <svg class="stage-icon-svg" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" shape-rendering="crispEdges">
-          <rect x="1" y="4" width="14" height="5" fill="${PALETTE.OUTLINE_DARK}" />
-          <rect x="2" y="5" width="12" height="3" fill="${PALETTE.STEEL_MAIN}" />
-          <rect x="1" y="10" width="14" height="5" fill="${PALETTE.OUTLINE_DARK}" />
-          <rect x="2" y="11" width="12" height="3" fill="${PALETTE.STEEL_LIGHT}" />
-        </svg>
-      `;
-      case "HOUSE":
-        return `
-        <svg class="stage-icon-svg" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" shape-rendering="crispEdges">
-          <!-- Roof -->
-          <polygon points="8,2 2,8 14,8" fill="${PALETTE.OUTLINE_DARK}" />
-          <polygon points="8,4 4,8 12,8" fill="${PALETTE.STEEL_LIGHT}" />
-          <!-- Walls -->
-          <rect x="3" y="8" width="10" height="7" fill="${PALETTE.OUTLINE_DARK}" />
-          <rect x="4" y="9" width="8" height="5" fill="${PALETTE.CREAM_BG}" />
-          <rect x="7" y="10" width="2" height="4" fill="${PALETTE.OUTLINE_DARK}" />
-        </svg>
-      `;
-      case "BUILDING":
-        return `
-        <svg class="stage-icon-svg" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" shape-rendering="crispEdges">
-          <rect x="3" y="2" width="10" height="13" fill="${PALETTE.OUTLINE_DARK}" />
-          <rect x="4" y="3" width="8" height="11" fill="${PALETTE.PALE_MINT}" />
-          <rect x="5" y="4" width="2" height="2" fill="${PALETTE.OUTLINE_DARK}" />
-          <rect x="9" y="4" width="2" height="2" fill="${PALETTE.OUTLINE_DARK}" />
-          <rect x="5" y="7" width="2" height="2" fill="${PALETTE.OUTLINE_DARK}" />
-          <rect x="9" y="7" width="2" height="2" fill="${PALETTE.OUTLINE_DARK}" />
-          <rect x="5" y="10" width="2" height="2" fill="${PALETTE.OUTLINE_DARK}" />
-          <rect x="9" y="10" width="2" height="2" fill="${PALETTE.OUTLINE_DARK}" />
-        </svg>
-      `;
-      case "HIGHRISE":
-        return `
-        <svg class="stage-icon-svg" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" shape-rendering="crispEdges">
-          <!-- Tall tower -->
-          <rect x="2" y="1" width="7" height="14" fill="${PALETTE.OUTLINE_DARK}" />
-          <rect x="3" y="2" width="5" height="12" fill="${PALETTE.STEEL_MAIN}" />
-          <!-- Mid tower -->
-          <rect x="8" y="5" width="6" height="10" fill="${PALETTE.OUTLINE_DARK}" />
-          <rect x="9" y="6" width="4" height="8" fill="${PALETTE.STEEL_LIGHT}" />
-          <!-- Window slits -->
-          <rect x="4" y="3" width="3" height="1" fill="${PALETTE.WHITE}" />
-          <rect x="4" y="5" width="3" height="1" fill="${PALETTE.WHITE}" />
-          <rect x="4" y="7" width="3" height="1" fill="${PALETTE.WHITE}" />
-        </svg>
-      `;
-      case "TOKYO_TOWER":
-        return `
-        <svg class="stage-icon-svg" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" shape-rendering="crispEdges">
-          <!-- Spire -->
-          <rect x="7" y="1" width="2" height="4" fill="${PALETTE.OUTLINE_DARK}" />
-          <!-- Main lattice pyramid -->
-          <polygon points="8,5 3,15 13,15" fill="${PALETTE.OUTLINE_DARK}" />
-          <polygon points="8,6 4,14 12,14" fill="${PALETTE.ACCENT_GREEN}" />
-          <rect x="5" y="9" width="6" height="2" fill="${PALETTE.OUTLINE_DARK}" />
-        </svg>
-      `;
-      case "SKYTREE":
-        return `
-        <svg class="stage-icon-svg" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" shape-rendering="crispEdges">
-          <!-- Antenna Spire -->
-          <rect x="7" y="1" width="2" height="5" fill="${PALETTE.OUTLINE_DARK}" />
-          <!-- Upper Pod -->
-          <rect x="5" y="6" width="6" height="3" fill="${PALETTE.OUTLINE_DARK}" />
-          <rect x="6" y="7" width="4" height="1" fill="${PALETTE.WHITE}" />
-          <!-- Shaft -->
-          <polygon points="7,9 9,9 11,15 5,15" fill="${PALETTE.OUTLINE_DARK}" />
-          <polygon points="7.5,9 8.5,9 10,14 6,14" fill="${PALETTE.PALE_MINT}" />
-        </svg>
-      `;
-      case "EXTRA":
-        return `
-        <svg class="stage-icon-svg" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" shape-rendering="crispEdges">
-          <!-- Pixel Star / Fireworks -->
-          <rect x="7" y="1" width="2" height="14" fill="${PALETTE.OUTLINE_DARK}" />
-          <rect x="1" y="7" width="14" height="2" fill="${PALETTE.OUTLINE_DARK}" />
-          <rect x="4" y="4" width="8" height="8" fill="${PALETTE.ACCENT_GREEN}" />
-          <rect x="6" y="6" width="4" height="4" fill="${PALETTE.WHITE}" />
-        </svg>
-      `;
-      case "GROUND":
-      default:
-        return `
-        <svg class="stage-icon-svg" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" shape-rendering="crispEdges">
-          <!-- Ground horizon & dirt -->
-          <rect x="1" y="9" width="14" height="6" fill="${PALETTE.OUTLINE_DARK}" />
-          <rect x="2" y="10" width="12" height="4" fill="${PALETTE.ACCENT_GREEN}" />
-          <rect x="3" y="11" width="2" height="1" fill="${PALETTE.WHITE}" />
-          <rect x="8" y="12" width="3" height="1" fill="${PALETTE.WHITE}" />
-        </svg>
-      `;
-    }
+    return `
+    <svg class="stage-icon-svg" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="${UI_PALETTE.DARK}" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+      <!-- Main Highrise Silhouette -->
+      <rect x="4" y="2" width="8" height="13" rx="1" fill="${UI_PALETTE.PALE_1}" stroke="${UI_PALETTE.DARK}" />
+      <!-- Window grid -->
+      <line x1="6.5" y1="5" x2="6.5" y2="6.5" stroke="${UI_PALETTE.DARK}" stroke-width="1.2" />
+      <line x1="9.5" y1="5" x2="9.5" y2="6.5" stroke="${UI_PALETTE.DARK}" stroke-width="1.2" />
+      <line x1="6.5" y1="8.5" x2="6.5" y2="10" stroke="${UI_PALETTE.DARK}" stroke-width="1.2" />
+      <line x1="9.5" y1="8.5" x2="9.5" y2="10" stroke="${UI_PALETTE.DARK}" stroke-width="1.2" />
+      <!-- Low Side Wing -->
+      <rect x="1" y="7" width="3" height="8" rx="0.5" fill="${UI_PALETTE.PALE_2}" stroke="${UI_PALETTE.DARK}" />
+      <rect x="12" y="9" width="3" height="6" rx="0.5" fill="${UI_PALETTE.ACCENT}" stroke="${UI_PALETTE.DARK}" />
+    </svg>
+  `;
   }
   function getSuccessIconSvg() {
     return `
-    <svg class="feedback-icon-svg" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" shape-rendering="crispEdges">
-      <rect x="9" y="1" width="2" height="18" fill="${PALETTE.OUTLINE_DARK}" />
-      <rect x="1" y="9" width="18" height="2" fill="${PALETTE.OUTLINE_DARK}" />
-      <rect x="5" y="5" width="10" height="10" fill="${PALETTE.ACCENT_GREEN}" />
-      <rect x="8" y="8" width="4" height="4" fill="${PALETTE.WHITE}" />
-      <rect x="9" y="9" width="2" height="2" fill="${PALETTE.PALE_MINT}" />
+    <svg class="feedback-icon-svg" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="${UI_PALETTE.DARK}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+      <!-- Background Circle -->
+      <circle cx="12" cy="12" r="10" fill="${UI_PALETTE.PALE_2}" stroke="${UI_PALETTE.DARK}" stroke-width="2" />
+      <!-- Bold Checkmark -->
+      <path d="M7 12.5 L10.5 16 L17.5 8.5" stroke="${UI_PALETTE.DARK}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
     </svg>
   `;
   }
   function getMissIconSvg() {
     return `
-    <svg class="feedback-icon-svg" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" shape-rendering="crispEdges">
-      <!-- Collision burst shape -->
-      <polygon points="10,2 12,7 18,5 14,10 19,15 13,14 10,19 7,14 1,15 6,10 2,5 8,7" fill="${PALETTE.OUTLINE_DARK}" />
-      <polygon points="10,4 11.5,8 16,6.5 13,10 16.5,14 12,13 10,16.5 8,13 3.5,14 7,10 4,6.5 8.5,8" fill="${PALETTE.ACCENT_GREEN}" />
-      <rect x="8" y="8" width="4" height="4" fill="${PALETTE.CREAM_BG}" />
+    <svg class="feedback-icon-svg" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="${UI_PALETTE.DARK}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+      <!-- Background Circle -->
+      <circle cx="12" cy="12" r="10" fill="${UI_PALETTE.PALE_1}" stroke="${UI_PALETTE.DARK}" stroke-width="2" />
+      <!-- Bold X Cross -->
+      <path d="M8 8 L16 16 M16 8 L8 16" stroke="${UI_PALETTE.DARK}" stroke-width="2.6" stroke-linecap="round" />
     </svg>
   `;
   }
@@ -5896,7 +5841,8 @@
     metricCorrect.textContent = `${summary.correctCount} \u554F`;
     metricMiss.textContent = `${summary.missCount} \u56DE`;
     metricMistakes.textContent = `${summary.typingMistakeCount} \u56DE`;
-    metricChars.textContent = `${summary.totalKeystrokes || summary.correctKeystrokes + summary.typingMistakeCount} \u6587\u5B57`;
+    const typedCount = summary.typedCharacterCount ?? summary.typedCharacters ?? (typeof summary.accuracy === "object" ? summary.accuracy.typed : 0) ?? 0;
+    metricChars.textContent = `${typedCount} \u6587\u5B57`;
     const accVal = summary.accuracyPercent ?? (typeof summary.accuracy === "object" ? summary.accuracy.percent : summary.accuracy);
     metricAccuracy.textContent = `${Number(accVal || 100).toFixed(1)}%`;
     metricMaxCombo.textContent = `${summary.maxCombo} COMBO`;
@@ -5933,7 +5879,7 @@
       reachedStage: summary.backgroundStage?.id || "GROUND",
       startedAt: summary.startedAt ? summary.startedAt.toISOString() : (/* @__PURE__ */ new Date()).toISOString(),
       finishedAt: summary.finishedAt ? summary.finishedAt.toISOString() : (/* @__PURE__ */ new Date()).toISOString(),
-      appVersion: "1.1.0"
+      appVersion: "1.2.0"
     };
     try {
       const res = await backendClient.submitScore(lastSubmittedPayload);

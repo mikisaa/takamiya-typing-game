@@ -1,6 +1,6 @@
 # 運用・デプロイマニュアル (14_operation_manual.md)
 
-本ドキュメントは、**TakamiyaTypingGame (TTG) v1.1.0** の本番環境（Google Apps Script Web App + Google スプレッドシート）に関する運用・保守・デプロイ・データ管理・インシデント対応およびロールバック手順を規定する Authoritative SSOT です。
+本ドキュメントは、**TakamiyaTypingGame (TTG) v1.2.0** の本番環境（Google Apps Script Web App + Google スプレッドシート）に関する運用・保守・デプロイ・データ管理・インシデント対応およびロールバック手順を規定する Authoritative SSOT です。
 
 ---
 
@@ -11,7 +11,7 @@
 | **Frontend Runtime** | Google Apps Script (GAS) Web App (HtmlService) | `https://script.google.com/macros/s/AKfycbzdPNsWV5kNdtpsF91jkca3lkJSLdVxG_2Ux8V5a5f1kMWLJmogiUG8mzbSiRk3S3xeeQ/exec` |
 | **Source Code (SSOT)**| GitHub Repository | `https://github.com/mikisaa/takamiya-typing-game` |
 | **Production Branch**| Git Branch | `main` |
-| **Release Identity** | Git Tag / GitHub Release | `v1.1.0` |
+| **Release Identity** | Git Tag / GitHub Release | `v1.2.0` |
 | **Backend Runtime**  | Google Apps Script (GAS) Web App | 同上（Frontend と単一エンドポイントで共存） |
 | **Database**         | Google Spreadsheet | `TakamiyaTypingGame DB` (ID: `1-HUuzXK27t2eRJEwgSMVO1bNVkVRwVTyzb4LftW5TX8`) |
 | **Question Master**  | CSV (Shift-JIS/UTF-8) | `data/questions/takamiya-typing-game-master-v3.csv` (180問) |
@@ -33,7 +33,7 @@
 | **Backend Runtime** | same GAS Web App | Frontend と同一の Web App デプロイ |
 | **Database** | Google Spreadsheet (`TakamiyaTypingGame DB`) | ID: `1-HUuzXK27t2eRJEwgSMVO1bNVkVRwVTyzb4LftW5TX8` |
 | **Question Master** | CSV v3 (`data/questions/takamiya-typing-game-master-v3.csv`) | 180問の出題語句・読み・ストロークの正本 |
-| **Release Identity** | Git Tag (`v1.1.0`) | コミットとリリースバージョンの対応付け |
+| **Release Identity** | Git Tag (`v1.2.0`) | コミットとリリースバージョンの対応付け |
 | **Documentation** | Repository `docs/` | 仕様・アーキテクチャ・運用手引の正本 |
 
 ---
